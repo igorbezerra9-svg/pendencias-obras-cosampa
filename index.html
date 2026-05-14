@@ -837,15 +837,24 @@ function renderConsolidado() {
     cargasByDate[key] = (cargasByDate[key]||0) + 1;
   });
   const cargaCount = {};
+  // Acumula resolvidas por data (soma de removidas de todas as cargas daquele dia)
+  const resolvidasPorData = {};
+  cargas.forEach(c => {
+    const key = formatCargaDate(c.data);
+    resolvidasPorData[key] = (resolvidasPorData[key]||0) + (parseInt(c.removidas)||0);
+  });
   cargas.forEach(c => {
     const key = formatCargaDate(c.data);
     cargaCount[key] = (cargaCount[key]||0) + 1;
     const total = cargasByDate[key];
     const label = total > 1 ? key + ' (' + cargaCount[key] + 'ª)' : key;
+    // Resolvidas = removidas desta carga + os marcados como Resolvido pelas adm
+    const resolvidasAdm = parseInt(c.resolvidasAdm)||0;
+    const resolvidasTotal = (parseInt(c.removidas)||0) + resolvidasAdm;
     allPoints.push({
       data: label,
       pendentes: parseInt(c.pendentes)||0,
-      resolvidas: parseInt(c.removidas)||0,
+      resolvidas: resolvidasTotal,
       emTrat: 0,
       novas: parseInt(c.novas)||0,
       reinc: 0,
@@ -873,15 +882,17 @@ function renderConsolidado() {
     });
   });
 
-  // Hoje
+  // Hoje — só adiciona se houver diferença de pendentes vs última carga
   const hojeKey = new Date().toLocaleDateString('pt-BR');
   const hojeFormatted = formatCargaDate(hojeKey);
-  // Só adiciona hoje se não for igual à última carga
   const lastCargaData = cargas.length ? formatCargaDate(cargas[cargas.length-1].data) : '';
-  if (hojeFormatted !== lastCargaData) {
+  const lastCargaPend = cargas.length ? (parseInt(cargas[cargas.length-1].pendentes)||0) : 0;
+  const hojeResolvidas = resolvidas + (cargas.length ? (parseInt(cargas[cargas.length-1].removidas)||0) : 0);
+  // Adiciona hoje se: pendentes mudou OU resolvidas pela adm > 0
+  if (pendentes !== lastCargaPend || resolvidas > 0) {
     allPoints.push({
-      data: hojeFormatted,
-      pendentes, resolvidas, emTrat,
+      data: hojeFormatted + (hojeFormatted === lastCargaData ? ' (atual)' : ''),
+      pendentes, resolvidas: hojeResolvidas, emTrat,
       novas: 0,
       reinc: items.filter(o=>(o.reincidencias||0)>0&&o.status!=='Resolvido').length,
       tipo: 'hoje',
