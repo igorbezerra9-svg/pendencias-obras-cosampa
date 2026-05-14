@@ -892,7 +892,6 @@ function renderConsolidado() {
 
   const points = allPoints.sort((a,b) => (a.sortKey||'').localeCompare(b.sortKey||''));
   const maxP = Math.max(...points.map(p=>p.pendentes), 1);
-  const maxP = Math.max(...points.map(p=>p.pendentes), 1);
 
   // Lista diária
   document.getElementById('cons-lista').innerHTML = points.length ? [...points].reverse().slice(0,14).map(p=>{
