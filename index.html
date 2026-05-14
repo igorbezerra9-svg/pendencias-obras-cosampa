@@ -307,18 +307,45 @@
     <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
       <button class="btn" onclick="exportarConsolidadoCSV()">&#11015; Exportar Consolidado CSV</button>
     </div>
-    <div class="grid2" style="margin-bottom:12px;">
-      <div class="card">
-        <div class="card-title">Situação atual vs consolidado</div>
-        <div id="cons-kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem;"></div>
-        <div class="card-title" style="margin-top:4px;">Evolução diária</div>
-        <div id="cons-lista"><div class="empty"><div class="empty-icon">&#128197;</div>Nenhum dado ainda</div></div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title">Visão geral do período</div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0;align-items:center;margin-bottom:1.25rem;">
+        <div style="background:var(--surface2);border-radius:0 8px 8px 0;border-left:3px solid var(--text);padding:1rem 1.25rem;text-align:center;">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text2);margin-bottom:6px;">Tamanho da pendência</div>
+          <div style="font-size:32px;font-weight:600;font-family:var(--mono);" id="narr-total">—</div>
+          <div style="font-size:12px;font-family:var(--mono);font-weight:500;color:var(--text2);margin-top:4px;" id="narr-total-val">R$ —</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px;" id="narr-total-sub">última carga</div>
+        </div>
+        <div style="font-size:20px;color:var(--text3);padding:0 10px;text-align:center;">→</div>
+        <div style="background:var(--surface2);border-radius:0 8px 8px 0;border-left:3px solid var(--green);padding:1rem 1.25rem;text-align:center;">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:6px;">O que foi tratado</div>
+          <div style="font-size:32px;font-weight:600;font-family:var(--mono);color:var(--green);" id="narr-tratado">—</div>
+          <div style="font-size:12px;font-family:var(--mono);font-weight:500;color:var(--green);margin-top:4px;" id="narr-tratado-val">R$ —</div>
+          <div style="font-size:10px;color:var(--green);margin-top:4px;" id="narr-tratado-sub">resolvidas · 0%</div>
+        </div>
+        <div style="font-size:20px;color:var(--text3);padding:0 10px;text-align:center;">→</div>
+        <div style="background:var(--surface2);border-radius:0 8px 8px 0;border-left:3px solid var(--red);padding:1rem 1.25rem;text-align:center;">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:6px;">Saldo atual</div>
+          <div style="font-size:32px;font-weight:600;font-family:var(--mono);color:var(--red);" id="narr-saldo">—</div>
+          <div style="font-size:12px;font-family:var(--mono);font-weight:500;color:var(--red);margin-top:4px;" id="narr-saldo-val">R$ —</div>
+          <div style="font-size:10px;color:var(--red);margin-top:4px;" id="narr-saldo-sub">pendentes hoje</div>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-title">Linha do tempo</div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;" id="cons-legend"></div>
-        <div style="position:relative;height:260px;"><canvas id="cons-chart" role="img" aria-label="Gráfico de linha mostrando evolução de obras pendentes ao longo do tempo.">Evolução de obras ao longo do tempo.</canvas></div>
+      <div style="height:1px;background:var(--border);margin:1rem 0;"></div>
+      <div class="card-title" style="margin-bottom:8px;">Evolução diária</div>
+      <div id="cons-lista"><div class="empty"><div class="empty-icon">&#128197;</div>Nenhum dado ainda</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Linha do tempo — por carga</div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <button class="btn" id="cons-tab-qtd" onclick="switchConsChart('qtd')" style="font-size:12px;padding:5px 12px;background:var(--text);color:#fff;border-color:var(--text);">Quantidade</button>
+        <button class="btn" id="cons-tab-val" onclick="switchConsChart('valor')" style="font-size:12px;padding:5px 12px;">Valor (R$)</button>
       </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;" id="cons-legend"></div>
+      <div style="position:relative;height:260px;" id="cons-wrap-qtd"><canvas id="cons-chart" role="img" aria-label="Gráfico de barras mostrando obras pendentes, resolvidas e novas por data de carga.">Evolução de obras ao longo do tempo.</canvas></div>
+      <div style="position:relative;height:260px;display:none;" id="cons-wrap-val"><canvas id="cons-chart-val" role="img" aria-label="Gráfico de barras mostrando valor em R$ pendente e resolvido por data de carga.">Evolução de valor ao longo do tempo.</canvas></div>
     </div>
   </div>
 
@@ -422,6 +449,16 @@ function normalizeObra(o) {
     obs: String(o.obs||""),
     firstSeen: String(o.firstSeen||"")
   };
+}
+
+function formatCargaDate(d) {
+  if (!d) return '';
+  if (typeof d==='string' && d.includes('/')) return d.split('/').slice(0,2).join('/');
+  if (typeof d==='string' && d.includes('T')) {
+    const dt=new Date(d);
+    return isNaN(dt)?d:(dt.getDate()).toString().padStart(2,'0')+'/'+(dt.getMonth()+1).toString().padStart(2,'0');
+  }
+  return String(d);
 }
 
 function formatDateStr(v) {
