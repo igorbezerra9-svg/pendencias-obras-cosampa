@@ -128,6 +128,8 @@
   .cons-badges{display:flex;gap:5px;flex-wrap:wrap;min-width:180px;justify-content:flex-end;align-items:flex-start;padding-top:2px;}
   #cfg-banner { background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 8px; padding: 11px 16px; margin-bottom: 1.25rem; font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 </head>
 <body>
 
@@ -952,7 +954,7 @@ function renderConsolidado() {
   const datVRes = points.map(p=>Math.round(p.valorRes||0));
 
   // Qtd chart
-  if (window.ChartDataLabels) Chart.register(ChartDataLabels);
+  Chart.register(ChartDataLabels);
   if (consChart) { consChart.destroy(); consChart = null; }
   const ctx = document.getElementById('cons-chart');
   if (ctx) consChart = new Chart(ctx, {
@@ -1035,10 +1037,41 @@ function switchConsChart(tipo) {
 
 
 
+function exportarConsolidadoCSV() {
+  const cargas = state.cargas || [];
+  const snaps = state.snapshots || [];
+  const obras = state.obras || [];
+  const allPoints = [];
+  cargas.forEach(c => allPoints.push({
+    data: formatCargaDate(c.data), tipo: 'Carga importada',
+    pendentes: parseInt(c.pendentes)||0, resolvidas: parseInt(c.removidas)||0,
+    novas: parseInt(c.novas)||0, valorPend: parseFloat(c.valorPendente)||0
+  }));
+  snaps.forEach(s => allPoints.push({
+    data: formatCargaDate(s.data), tipo: 'Snapshot diário',
+    pendentes: parseInt(s.pendentes)||0, resolvidas: parseInt(s.resolvidas)||0,
+    novas: 0, valorPend: parseFloat(s.valorPend)||0
+  }));
+  allPoints.push({
+    data: new Date().toLocaleDateString('pt-BR'), tipo: 'Hoje',
+    pendentes: obras.filter(o=>o.status!=='Resolvido').length,
+    resolvidas: obras.filter(o=>o.status==='Resolvido').length,
+    novas: 0, valorPend: obras.filter(o=>o.status!=='Resolvido').reduce((s,o)=>s+(o.valor||0),0)
+  });
+  if (!allPoints.length) { showToast('Nenhum dado para exportar'); return; }
+  const h = ['Data','Tipo','Pendentes','Resolvidas','Novas','Valor Pendente'];
+  const rows = allPoints.map(p=>[p.data,p.tipo,p.pendentes,p.resolvidas,p.novas,p.valorPend.toFixed(2)]);
+  const csv = [h,...rows].map(r=>r.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = 'consolidado_obras_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+  showToast('✅ CSV exportado!');
+}
+
 function showToast(msg) { const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3500); }
 
-if (!window.Chart) { const s=document.createElement("script"); s.src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"; document.head.appendChild(s); }
-if (!window.ChartDataLabels) { const s=document.createElement("script"); s.src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"; document.head.appendChild(s); }
+// Chart.js loaded via head scripts
 window.addEventListener("beforeunload",function(e){ if(pendentesSet&&pendentesSet.size>0){e.preventDefault();e.returnValue="Você tem alterações não salvas.";return e.returnValue;} });
 
 if (configured) { document.getElementById("cfg-banner").style.display="none"; sincronizar(); setInterval(sincronizar,30000); }
