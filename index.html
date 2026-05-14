@@ -848,18 +848,29 @@ function renderConsolidado() {
   const dateMap = {};
   allPoints.forEach(p => {
     const key = formatCargaDate(p.data);
-    // Keep the one with more info (snapshots over cargas, hoje overrides all)
-    if (!dateMap[key] || p.tipo==='hoje' || (p.tipo==='snapshot'&&dateMap[key].tipo==='carga')) {
+    if (!dateMap[key]) {
       dateMap[key] = {...p, data: key};
-    } else if (dateMap[key].tipo===p.tipo) {
-      // Same type same date — merge: take max pendentes, sum resolvidas/novas
-      dateMap[key] = {...dateMap[key],
-        pendentes: Math.max(dateMap[key].pendentes, p.pendentes),
-        resolvidas: Math.max(dateMap[key].resolvidas, p.resolvidas),
-        novas: dateMap[key].novas + p.novas,
-        valorPend: Math.max(dateMap[key].valorPend, p.valorPend),
-        valorRes: Math.max(dateMap[key].valorRes||0, p.valorRes||0),
-      };
+    } else {
+      const ex = dateMap[key];
+      // hoje sempre prevalece
+      if (p.tipo==='hoje') {
+        dateMap[key] = {...p, data: key,
+          novas: ex.novas + p.novas,
+          resolvidas: Math.max(ex.resolvidas, p.resolvidas),
+        };
+      } else if (p.tipo==='snapshot' && ex.tipo==='carga') {
+        // snapshot tem mais info que carga
+        dateMap[key] = {...p, data: key, novas: ex.novas + p.novas};
+      } else {
+        // mesmo tipo — acumula novas, pega pendentes mais recente (menor), resolvidas maior
+        dateMap[key] = {...ex,
+          pendentes: Math.min(ex.pendentes, p.pendentes),
+          resolvidas: Math.max(ex.resolvidas, p.resolvidas),
+          novas: ex.novas + p.novas,
+          valorPend: Math.min(ex.valorPend, p.valorPend),
+          valorRes: Math.max(ex.valorRes||0, p.valorRes||0),
+        };
+      }
     }
   });
   const points = Object.values(dateMap).sort((a,b)=>{
@@ -919,22 +930,38 @@ function renderConsolidado() {
     ]},
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{
+          afterBody: items => {
+            const i = items[0].dataIndex;
+            return ['Pendentes: '+datPend[i], 'Resolvidas: '+datRes[i], 'Novas: '+datNovas[i], 'Reinc: '+datReinc[i]];
+          }
+        }}
+      },
       scales:{
-        x:{grid:{display:false}, ticks:{font:{size:11},color:'#888780',autoSkip:false,maxRotation:45}},
-        y:{grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#888780'}}
+        x:{grid:{display:false}, ticks:{font:{size:11},color:'#888780',autoSkip:false,maxRotation:45},
+          stacked:false},
+        y:{grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#888780'}, stacked:false}
       }
     }
   });
 
   // Valor chart
+  // compute valorRes from snapshots properly
+  const datVResFinal = points.map((p,i) => {
+    if (p.valorRes && p.valorRes > 0) return Math.round(p.valorRes);
+    // estimate from resolvidas ratio
+    const totalV = p.valorPend + (p.valorRes||0);
+    return Math.round(p.resolvidas > 0 ? (totalV * p.resolvidas / Math.max(p.pendentes+p.resolvidas,1)) : 0);
+  });
+
   if (consChartVal) { consChartVal.destroy(); consChartVal = null; }
   const ctxVal = document.getElementById('cons-chart-val');
   if (ctxVal) consChartVal = new Chart(ctxVal, {
     type:'bar',
     data:{labels, datasets:[
       {label:'Valor pendente', data:datVPend, backgroundColor:'#1A1916', borderRadius:3, borderSkipped:false},
-      {label:'Valor resolvido', data:datVRes, backgroundColor:'#2D6A4F', borderRadius:3, borderSkipped:false},
+      {label:'Valor resolvido', data:datVResFinal, backgroundColor:'#2D6A4F', borderRadius:3, borderSkipped:false},
     ]},
     options:{
       responsive:true, maintainAspectRatio:false,
