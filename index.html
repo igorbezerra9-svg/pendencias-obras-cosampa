@@ -975,11 +975,13 @@ function renderConsolidado() {
           }
         }},
         datalabels:{
-          anchor:'end', align:'top',
-          font:{size:10, family:'IBM Plex Mono', weight:'500'},
-          color: ctx => ctx.dataset.backgroundColor,
-          formatter: v => v > 0 ? v : '',
-          padding:{bottom:2}
+          anchor:'center', align:'center',
+          font:{size:12, weight:'700'},
+          color:'#1A1916',
+          backgroundColor:'rgba(255,255,255,0.92)',
+          borderRadius:4,
+          padding:{top:3,bottom:3,left:6,right:6},
+          formatter: v => v > 0 ? v : ''
         }
       },
       scales:{
@@ -1009,7 +1011,18 @@ function renderConsolidado() {
     ]},
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>'R$ '+c.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2})}}},
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>'R$ '+c.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2})}},
+        datalabels:{
+          anchor:'center', align:'center',
+          font:{size:12, weight:'700'},
+          color:'#1A1916',
+          backgroundColor:'rgba(255,255,255,0.92)',
+          borderRadius:4,
+          padding:{top:3,bottom:3,left:6,right:6},
+          formatter: v => v > 0 ? (v>=1000 ? 'R$ '+(v/1000).toFixed(1)+'k' : 'R$ '+v) : ''
+        }
+      },
       scales:{
         x:{grid:{display:false}, ticks:{font:{size:11},color:'#888780',autoSkip:false,maxRotation:45}},
         y:{grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#888780',callback:v=>v>=1000?'R$'+(v/1000).toFixed(0)+'k':'R$'+v}}
