@@ -872,9 +872,11 @@ function renderConsolidado() {
     });
   });
 
-  // Snapshots
+  // Snapshots — só adiciona se não houver carga no mesmo dia
+  const cargaDates = new Set(Object.keys(cargasByDate));
   snaps.forEach(s => {
     const key = formatCargaDate(s.data);
+    if (cargaDates.has(key)) return; // já tem carga nesse dia
     allPoints.push({
       data: key,
       pendentes: parseInt(s.pendentes)||0,
@@ -889,16 +891,17 @@ function renderConsolidado() {
     });
   });
 
-  // Hoje — só adiciona se houver diferença de pendentes vs última carga
+  // Hoje — só adiciona se data for diferente de TODAS as cargas E houver mudança
   const hojeKey = new Date().toLocaleDateString('pt-BR');
   const hojeFormatted = formatCargaDate(hojeKey);
   const lastCargaData = cargas.length ? formatCargaDate(cargas[cargas.length-1].data) : '';
   const lastCargaPend = cargas.length ? (parseInt(cargas[cargas.length-1].pendentes)||0) : 0;
   const hojeResolvidas = resolvidas + (cargas.length ? (parseInt(cargas[cargas.length-1].removidas)||0) : 0);
-  // Adiciona hoje se: pendentes mudou OU resolvidas pela adm > 0
-  if (pendentes !== lastCargaPend || resolvidas > 0) {
+  // Só mostra "hoje" se for um dia diferente das cargas E tiver mudança
+  const hojeEhNovoDia = !cargaDates.has(hojeFormatted);
+  if (hojeEhNovoDia && (pendentes !== lastCargaPend || resolvidas > 0)) {
     allPoints.push({
-      data: hojeFormatted + (hojeFormatted === lastCargaData ? ' (atual)' : ''),
+      data: hojeFormatted,
       pendentes, resolvidas: hojeResolvidas, emTrat,
       novas: 0,
       reinc: items.filter(o=>(o.reincidencias||0)>0&&o.status!=='Resolvido').length,
