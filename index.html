@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pendências Técnicas · COSAMPA</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F5F4F0; --surface: #FFFFFF; --surface2: #EEECEA; --border: #DDDBD6;
+    --text: #1A1916; --text2: #6B6860; --text3: #A09E99;
+    --green: #2D6A4F; --green-bg: #D8F0E5;
+    --amber: #92400E; --amber-bg: #FEF3C7;
+    --red: #991B1B; --red-bg: #FEE2E2;
+    --blue: #1E40AF; --blue-bg: #DBEAFE;
+    --font: "IBM Plex Sans", sans-serif; --mono: "IBM Plex Mono", monospace;
+  }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+  header { background: var(--text); color: #fff; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 52px; position: sticky; top: 0; z-index: 100; }
+  .brand { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .brand span { opacity: .4; margin: 0 8px; }
+  .header-right { display: flex; align-items: center; gap: 14px; }
+  .sync-status { font-size: 11px; opacity: .6; font-family: var(--mono); display: flex; align-items: center; gap: 5px; }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; flex-shrink: 0; }
+  .sync-dot.off { background: #f87171; animation: none; }
+  .sync-dot.warn { background: #FBBF24; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+  nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; }
+  nav button { background: none; border: none; border-bottom: 2px solid transparent; padding: 12px 20px; font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; transition: color .15s; margin-bottom: -1px; }
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--text); border-bottom-color: var(--text); }
+  main { padding: 1.5rem 2rem; max-width: 1500px; margin: 0 auto; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+  .card-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); margin-bottom: 1rem; }
+  .screen { display: none; } .screen.active { display: block; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width:900px){ .grid2{ grid-template-columns:1fr; } .metrics{ grid-template-columns:repeat(2,1fr) !important; } }
+  .metrics { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 1.25rem; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; }
+  .metric.al { border-left: 3px solid var(--red); }
+  .metric.ag { border-left: 3px solid var(--green); }
+  .metric-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+  .metric-value { font-size: 28px; font-weight: 600; line-height: 1; font-family: var(--mono); }
+  .metric-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .evo-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; }
+  .prog-track { height: 10px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--green); border-radius: 99px; transition: width 1s ease; }
+  .prog-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 4px; }
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th { background: var(--surface2); text-align: left; padding: 8px 10px; font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text2); border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: #FAFAF8; }
+  tr.row-pendente td { background: #FFFBEB; }
+  tr.row-pendente td:first-child { border-left: 3px solid #F59E0B; padding-left: 7px; }
+  tr.row-salvo td { background: #F0FDF4; }
+  tr.row-salvo td:first-child { border-left: 3px solid #2D6A4F; padding-left: 7px; }
+  .mono { font-family: var(--mono); font-size: 11px; }
+  .tbl-input { font-family: var(--font); font-size: 11px; padding: 3px 7px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); width: 100%; }
+  .tbl-input:focus { outline: none; border-color: var(--text); background: #fff; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 4px; font-family: var(--mono); white-space: nowrap; }
+  .badge-ok { background: var(--green-bg); color: var(--green); }
+  .badge-warn { background: var(--amber-bg); color: var(--amber); }
+  .badge-danger { background: var(--red-bg); color: var(--red); }
+  .badge-new { background: var(--blue-bg); color: var(--blue); }
+  .badge-neutral { background: var(--surface2); color: var(--text2); }
+  .badge-trat { background: #EDE9FE; color: #5B21B6; }
+  .badge-reinc { background: #FFF0E6; color: #C2410C; }
+  .row-state { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; padding: 2px 5px; border-radius: 3px; margin-right: 3px; }
+  .rs-pend { background: var(--amber-bg); color: var(--amber); }
+  .rs-ok { background: var(--green-bg); color: var(--green); }
+  .pending-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; background: var(--amber-bg); color: var(--amber); padding: 5px 12px; border-radius: 6px; border: 1px solid #F59E0B; }
+  .pending-dot { width: 6px; height: 6px; border-radius: 50%; background: #F59E0B; animation: blink 1s infinite; flex-shrink: 0; }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
+  .btn { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font); font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; transition: background .15s; }
+  .btn:hover { background: var(--surface2); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
+  .btn-success { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-success:hover { background: #245C43; }
+  .btn-hdr { font-size: 12px; padding: 5px 10px; color: #fff; border-color: rgba(255,255,255,.2); background: transparent; }
+  .btn-hdr:hover { background: rgba(255,255,255,.1); }
+  .filters { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+  .filter-input { font-family: var(--font); font-size: 12px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); }
+  .filter-input:focus { outline: none; border-color: var(--text); }
+  .upload-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 2.5rem; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--text); background: var(--surface2); }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; }
+  .bar-label { min-width: 160px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { flex: 1; height: 6px; background: var(--surface2); border-radius: 99px; }
+  .bar-fill { height: 6px; background: var(--text); border-radius: 99px; transition: width .6s ease; }
+  .bar-count { min-width: 28px; text-align: right; font-family: var(--mono); font-size: 11px; font-weight: 500; }
+  .hist-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; flex-wrap: wrap; }
+  .hist-row:last-child { border-bottom: none; }
+  .hist-date { min-width: 90px; font-family: var(--mono); font-size: 11px; color: var(--text2); }
+  .edit-btn { background: none; border: none; cursor: pointer; padding: 3px 5px; border-radius: 4px; color: var(--text3); font-size: 14px; line-height: 1; transition: background .15s; }
+  .edit-btn:hover { background: var(--surface2); color: var(--text); }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; flex-shrink: 0; }
+  #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--text); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; pointer-events: none; z-index: 999; }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to{ transform:rotate(360deg); } }
+  .empty { text-align: center; padding: 2.5rem; color: var(--text3); }
+  .empty-icon { font-size: 36px; margin-bottom: 10px; }
+  #cfg-banner { background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 8px; padding: 11px 16px; margin-bottom: 1.25rem; font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+</style>
+</head>
+<body>
+
+<script>
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtAMWwlxF_ULtRKO67L8mU0oDrcipRb6Y6NLISlz-AcWNsB4YV7lfHKo-j__Aota1l/exec';
+</script>
+
+<header>
+  <div class="brand">COSAMPA <span>·</span> Pendências Técnicas</div>
+  <div class="header-right">
+    <div class="sync-status" id="sync-status">
+      <span class="sync-dot off" id="sync-dot"></span>
+      <span id="sync-txt">Aguardando configuração</span>
+    </div>
+    <button class="btn btn-hdr" onclick="sincronizar()">&#8635; Sincronizar</button>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('dashboard',this)">Dashboard</button>
+  <button onclick="showTab('acompanhamento',this)">Acompanhamento</button>
+  <button onclick="showTab('hierarquia',this)">Hierarquia</button>
+  <button onclick="showTab('historico',this)">Histórico</button>
+  <button onclick="showTab('importar',this)">&#8593; Importar Planilha</button>
+</nav>
+
+<main>
+  <div id="cfg-banner">
+    &#9881;&#65039; <strong>Configure a integração:</strong> substitua <code>https://script.google.com/macros/s/AKfycbwtAMWwlxF_ULtRKO67L8mU0oDrcipRb6Y6NLISlz-AcWNsB4YV7lfHKo-j__Aota1l/exec</code> pela URL do Apps Script.
+    <button class="btn" onclick="document.getElementById('cfg-banner').style.display='none'">Já configurei &#10003;</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="screen active" id="tab-dashboard">
+    <div id="dash-empty" class="empty" style="display:none">
+      <div class="empty-icon">&#128203;</div>
+      <div style="font-size:15px;font-weight:500;color:var(--text2);">Nenhum dado carregado</div>
+      <div style="font-size:13px;margin-top:4px;">Vá em <strong>Importar Planilha</strong> para começar</div>
+    </div>
+    <div id="dash-content">
+      <div class="metrics" id="metrics-area">
+        <div class="metric"><div class="metric-label">Carregando...</div><div class="metric-value" style="color:var(--text3)">—</div></div>
+      </div>
+      <div class="evo-card">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px;">Valor total em aberto — a ser resolvido</div>
+            <div style="font-size:36px;font-weight:600;font-family:var(--mono);" id="evo-pendente">R$ —</div>
+            <div id="evo-delta-wrap" style="margin-top:6px;"></div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;">Total já resolvido</div>
+            <div style="font-size:22px;font-weight:600;font-family:var(--mono);color:var(--green);" id="evo-resolvido">R$ —</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+          <span style="font-size:12px;color:var(--text2);">Progresso geral de resolução</span>
+          <span style="font-size:13px;font-weight:600;font-family:var(--mono);color:var(--green);" id="prog-pct">0%</span>
+        </div>
+        <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+        <div class="prog-labels"><span id="prog-label-res">R$ 0 resolvido</span><span id="prog-label-tot">R$ 0 total</span></div>
+      </div>
+      <div class="grid2" style="margin-bottom:1.25rem;">
+        <div class="card">
+          <div class="card-title">Por centro de serviço</div>
+          <div id="chart-centro"><div class="empty" style="padding:1rem">—</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Por etapa</div>
+          <div id="chart-etapa"><div class="empty" style="padding:1rem">—</div></div>
+        </div>
+      </div>
+      <div class="grid2" style="margin-bottom:1.25rem;">
+        <div class="card">
+          <div class="card-title">Por motivo da pendência</div>
+          <div id="chart-motivo"><div class="empty" style="padding:1rem">—</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Supervisores com mais pendências</div>
+          <div id="chart-supervisor"><div class="empty" style="padding:1rem">—</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Obras críticas — acima de 90 dias</div>
+        <div class="table-wrap" style="margin-top:8px;">
+          <table><thead><tr><th>GPM</th><th>OT</th><th>Endereço</th><th>Município</th><th>Centro</th><th>Supervisor</th><th>Etapa</th><th>Dias</th><th>Valor</th></tr></thead>
+          <tbody id="criticas-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACOMPANHAMENTO -->
+  <div class="screen" id="tab-acompanhamento">
+    <div class="filters">
+      <select class="filter-input" id="filtro-status" onchange="renderAcompanhamento()">
+        <option value="">Todos os status</option>
+        <option>Pendente</option><option>Em resolução</option><option>Resolvido</option><option value="critico">Crítico (90+ dias)</option>
+      </select>
+      <select class="filter-input" id="filtro-centro" onchange="renderAcompanhamento()"><option value="">Todos os centros</option></select>
+      <select class="filter-input" id="filtro-etapa" onchange="renderAcompanhamento()"><option value="">Todas as etapas</option></select>
+      <select class="filter-input" id="filtro-motivo" onchange="renderAcompanhamento()"><option value="">Todos os motivos</option></select>
+      <select class="filter-input" id="filtro-supervisor" onchange="renderAcompanhamento()"><option value="">Todos os supervisores</option></select>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+        <div id="pending-badge" style="display:none;" class="pending-badge">
+          <span class="pending-dot"></span>
+          <span id="pending-txt">0 pendentes</span>
+        </div>
+        <button class="btn" onclick="exportarCSV()">&#11015; Exportar CSV</button>
+        <button class="btn btn-success" id="btn-salvar" onclick="salvarTratativas()">&#128190; Salvar e sincronizar</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>GPM</th><th>OT</th><th>Endereço / Obra</th><th>Município</th><th>Centro</th><th>Supervisor</th><th>Etapa</th><th>Porte</th>
+          <th>Motivo</th><th>Detalhamento</th><th>Dias</th><th>Valor</th><th>Reprog.</th>
+          <th>Status</th><th>Responsável</th><th>Data Resolução</th><th>Observação</th><th></th>
+        </tr></thead>
+        <tbody id="acomp-body"></tbody>
+      </table>
+    </div>
+    <div id="acomp-empty" class="empty" style="display:none;"><div class="empty-icon">&#128269;</div>Nenhuma obra encontrada</div>
+    <div style="margin-top:10px;font-size:12px;color:var(--text3);" id="acomp-count"></div>
+  </div>
+
+  <!-- HIERARQUIA -->
+  <div class="screen" id="tab-hierarquia">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <label style="font-size:13px;color:var(--text2);">Filtrar por centro de serviço:</label>
+      <select class="filter-input" id="hier-filtro-centro" onchange="renderHierarquia()">
+        <option value="">Todos os centros</option>
+        <option>C.S - JUAZEIRO</option>
+        <option>C.S - MILAGRES</option>
+      </select>
+      <span id="hier-count" style="font-size:12px;color:var(--text3);"></span>
+    </div>
+    <div class="grid2" style="margin-bottom:12px;">
+      <div class="card">
+        <div class="card-title">Por centro de serviço</div>
+        <div id="hier-centro"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Por etapa</div>
+        <div id="hier-etapa"></div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-bottom:12px;">
+      <div class="card">
+        <div class="card-title">Por motivo</div>
+        <div id="hier-motivo"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Por porte</div>
+        <div id="hier-porte"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Ranking de supervisores</div>
+      <div id="hier-supervisor"></div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div class="screen" id="tab-historico">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn" onclick="limparHistorico()" style="color:var(--red);border-color:var(--red-bg);">&#128465; Limpar histórico e log</button>
+    </div>
+    <div class="grid2" style="margin-bottom:12px;">
+      <div class="card">
+        <div class="card-title">Evolução por carga</div>
+        <div id="historico-list"><div class="empty"><div class="empty-icon">&#128197;</div>Nenhuma carga ainda</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Obras persistentes sem resolução</div>
+        <div id="persistentes-list"><div class="empty"><div class="empty-icon">&#9888;&#65039;</div>Nenhuma carga ainda</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Log de atividades</div>
+      <div id="log-list" style="max-height:300px;overflow-y:auto;"><div class="empty">Nenhuma atividade</div></div>
+    </div>
+  </div>
+
+  <!-- IMPORTAR -->
+  <div class="screen" id="tab-importar">
+    <div class="card" style="max-width:620px;margin:0 auto;">
+      <div class="card-title">Importar nova planilha</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:1.25rem;line-height:1.7;">
+        Selecione o <strong>.xlsx</strong> exportado no mesmo formato. O sistema detecta automaticamente o que é novo, o que continua e o que foi resolvido. Tratativas já preenchidas são preservadas.
+      </p>
+      <div class="upload-zone" id="upload-zone"
+        onclick="document.getElementById('file-input').click()"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="handleDrop(event)">
+        <div style="font-size:36px;margin-bottom:8px;">&#128194;</div>
+        <div style="font-size:14px;font-weight:500;margin-bottom:4px;">Clique para selecionar ou arraste aqui</div>
+        <div style="font-size:12px;color:var(--text3);">Aceita .xlsx — mesmo formato de sempre</div>
+      </div>
+      <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none" onchange="handleFile(event)">
+      <div id="preview-area" style="display:none;margin-top:1.25rem;">
+        <div style="background:var(--surface2);border-radius:8px;padding:1rem;margin-bottom:1rem;" id="diff-area"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button class="btn" onclick="cancelarImport()">Cancelar</button>
+          <button class="btn btn-primary" id="btn-confirmar" onclick="confirmarImportacao()">Confirmar e enviar para o Sheets</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+const configured = typeof APPS_SCRIPT_URL !== "undefined" && APPS_SCRIPT_URL !== "https://script.google.com/macros/s/AKfycbwtAMWwlxF_ULtRKO67L8mU0oDrcipRb6Y6NLISlz-AcWNsB4YV7lfHKo-j__Aota1l/exec" && APPS_SCRIPT_URL.includes("script.google.com");
+let state = { obras: [], cargas: [], log: [] };
+let pendingImport = null;
+let currentTab = "dashboard";
+let editingSet = new Set(), pendentesSet = new Set(), salvosSet = new Set();
+let filtersPopulated = false;
+
+async function apiGet() {
+  const r = await fetch(APPS_SCRIPT_URL + "?action=getAll", { redirect: "follow", mode: "cors" });
+  return r.json();
+}
+async function apiPost(action, data) {
+  const r = await fetch(APPS_SCRIPT_URL, { method: "POST", redirect: "follow", mode: "cors", body: JSON.stringify({ action, data }) });
+  return r.json();
+}
+
+async function sincronizar(force) {
+  if (!configured) return;
+  const emAcomp = currentTab === "acompanhamento";
+  const digitando = document.activeElement && ["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName);
+  setSyncStatus("syncing");
+  try {
+    const data = await apiGet();
+    if (data && !data.error) {
+      state.cargas = data.cargas || [];
+      state.log = data.log || [];
+      if (emAcomp && digitando && !force) {
+        const srvMap = {};
+        (data.obras || []).forEach(o => { srvMap[o.id] = normalizeObra(o); });
+        state.obras = state.obras.map(o => srvMap[o.id]
+          ? { ...srvMap[o.id], status: o.status, responsavel: o.responsavel, dataResolucao: o.dataResolucao, obs: o.obs }
+          : o);
+      } else {
+        state.obras = (data.obras || []).map(normalizeObra);
+        renderCurrentTab();
+      }
+      setSyncStatus("ok");
+    } else throw new Error(data?.error || "erro");
+  } catch(e) { setSyncStatus("error"); console.error(e); }
+}
+
+function setSyncStatus(s) {
+  const dot = document.getElementById("sync-dot");
+  const txt = document.getElementById("sync-txt");
+  dot.className = "sync-dot" + (s==="error"?" off":s==="syncing"?" warn":"");
+  txt.textContent = s==="ok" ? "Sincronizado · " + new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
+    : s==="syncing" ? "Sincronizando..." : "Sem conexão";
+}
+
+function normalizeObra(o) {
+  return {
+    id: String(o.id||""), gpm: String(o.gpm||""), ot: String(o.ot||""),
+    obra: String(o.obra||""), municipio: String(o.municipio||""),
+    centro: String(o.centro||""), etapa: String(o.etapa||""),
+    porte: String(o.porte||""), chefeTurma: String(o.chefeTurma||""),
+    supervisor: String(o.supervisor||""), dataEnergizacao: String(o.dataEnergizacao||""),
+    motivoPendencia: String(o.motivoPendencia||""),
+    detalhamento: String(o.detalhamento||""),
+    diasAtraso: parseInt(o.diasAtraso)||0,
+    valor: parseFloat(o.valor)||0,
+    reprogramacao: String(o.reprogramacao||""),
+    status: String(o.status||"Pendente"),
+    responsavel: String(o.responsavel||""),
+    dataResolucao: String(o.dataResolucao||""),
+    obs: String(o.obs||""),
+    firstSeen: String(o.firstSeen||"")
+  };
+}
+
+function formatDateStr(v) {
+  if (!v || v==="-" || v==="—") return v||"—";
+  if (typeof v==="string" && v.includes("/")) return v;
+  if (typeof v==="string" && v.includes("T")) { const d=new Date(v); return isNaN(d)?v:d.toLocaleDateString("pt-BR"); }
+  if (typeof v==="string" && v.includes("-") && v.length===10) { const p=v.split("-"); return p[2]+"/"+p[1]+"/"+p[0]; }
+  const n=parseInt(v); if (!isNaN(n)&&n>40000) return new Date((n-25569)*86400000).toLocaleDateString("pt-BR");
+  return String(v);
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+name).classList.add("active");
+  if (btn) btn.classList.add("active");
+  currentTab = name;
+  filtersPopulated = false;
+  renderCurrentTab();
+}
+
+function renderCurrentTab() {
+  if (currentTab==="dashboard") renderDashboard();
+  else if (currentTab==="acompanhamento") renderAcompanhamento();
+  else if (currentTab==="hierarquia") renderHierarquia();
+  else if (currentTab==="historico") renderHistorico();
+}
+
+function renderDashboard() {
+  const obras = state.obras;
+  const empty = !obras.length;
+  document.getElementById("dash-empty").style.display = empty?"block":"none";
+  document.getElementById("dash-content").style.display = empty?"none":"block";
+  if (empty) return;
+  const pendentes = obras.filter(o=>o.status!=="Resolvido");
+  const resolvidas = obras.filter(o=>o.status==="Resolvido");
+  const criticas = pendentes.filter(o=>o.diasAtraso>=90);
+  const emResolucao = obras.filter(o=>o.status==="Em resolução");
+  const lastCarga = state.cargas[state.cargas.length-1];
+  const vPend = pendentes.reduce((s,o)=>s+o.valor,0);
+  const vRes = resolvidas.reduce((s,o)=>s+o.valor,0);
+  const vTotal = vPend+vRes;
+  const pct = vTotal>0?Math.round(vRes/vTotal*100):0;
+  document.getElementById("metrics-area").innerHTML = "<div class='metric al'><div class='metric-label'>Pendentes</div><div class='metric-value'>"+pendentes.length+"</div><div class='metric-sub'>de "+obras.length+" obras</div></div>"
+    +"<div class='metric ag'><div class='metric-label'>Resolvidas</div><div class='metric-value'>"+resolvidas.length+"</div><div class='metric-sub'>acumulado</div></div>"
+    +"<div class='metric'><div class='metric-label'>Em resolução</div><div class='metric-value'>"+emResolucao.length+"</div><div class='metric-sub'>em andamento</div></div>"
+    +"<div class='metric'><div class='metric-label'>Novas (última carga)</div><div class='metric-value'>"+(lastCarga?lastCarga.novas:0)+"</div><div class='metric-sub'>"+(lastCarga?lastCarga.data:"—")+"</div></div>"
+    +"<div class='metric al'><div class='metric-label'>Críticas 90+ dias</div><div class='metric-value' style='color:var(--red)'>"+criticas.length+"</div><div class='metric-sub'>"+fmtShort(criticas.reduce((s,o)=>s+o.valor,0))+"</div></div>";
+  document.getElementById("evo-pendente").textContent = fmtValor(vPend);
+  document.getElementById("evo-resolvido").textContent = fmtValor(vRes);
+  document.getElementById("prog-pct").textContent = pct+"%";
+  document.getElementById("prog-fill").style.width = pct+"%";
+  document.getElementById("prog-label-res").textContent = fmtValor(vRes)+" resolvido";
+  document.getElementById("prog-label-tot").textContent = fmtValor(vTotal)+" total";
+  if (state.cargas.length>=2) {
+    const prev = parseFloat(state.cargas[state.cargas.length-2].valorPendente)||0;
+    const delta = prev-vPend;
+    const dw = document.getElementById("evo-delta-wrap");
+    if (Math.abs(delta)>0.01) {
+      const cls = delta>0?"delta-good":"delta-bad";
+      const bg = delta>0?"var(--green-bg)":"var(--red-bg)"; const col = delta>0?"var(--green)":"var(--red)";
+      dw.innerHTML = "<span style='font-size:12px;font-weight:500;padding:2px 8px;border-radius:4px;background:"+bg+";color:"+col+"'>"+(delta>0?"&#8595;":"&#8593;")+" "+fmtValor(Math.abs(delta))+" "+(delta>0?"reduzido":"aumentou")+" desde última carga</span>";
+    } else dw.innerHTML="";
+  }
+  renderBarChart("chart-centro", pendentes, "centro");
+  renderBarChart("chart-etapa", pendentes, "etapa");
+  renderBarChart("chart-motivo", pendentes, "motivoPendencia");
+  renderSupervisores("chart-supervisor", pendentes);
+  document.getElementById("criticas-body").innerHTML = criticas.sort((a,b)=>b.diasAtraso-a.diasAtraso).slice(0,10).map(o=>"<tr><td class='mono'>"+o.gpm+"</td><td class='mono' style='color:var(--blue)'>"+o.ot+"</td><td style='max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"+o.obra+"</td><td>"+o.municipio+"</td><td>"+o.centro+"</td><td style='font-size:11px'>"+o.supervisor+"</td><td style='font-size:11px;color:var(--text2)'>"+o.etapa+"</td><td><span class='badge badge-danger'>"+o.diasAtraso+"d</span></td><td class='mono'>"+fmtValor(o.valor)+"</td></tr>").join("")||"<tr><td colspan='9' style='text-align:center;color:var(--text3);padding:1.5rem;'>Nenhuma obra crítica 🎉</td></tr>";
+}
+
+function renderBarChart(id, items, field) {
+  const counts={};
+  items.forEach(o=>{ const v=o[field]||"—"; counts[v]=(counts[v]||0)+1; });
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const max=sorted[0]?.[1]||1;
+  document.getElementById(id).innerHTML=sorted.map(([k,n])=>"<div class='bar-row'><div class='bar-label' title='"+k+"'>"+k+"</div><div class='bar-track'><div class='bar-fill' style='width:"+Math.round(n/max*100)+"%'></div></div><div class='bar-count'>"+n+"</div></div>").join("")||"<div class='empty' style='padding:1rem'>—</div>";
+}
+
+function renderSupervisores(id, items) {
+  const sups={};
+  items.forEach(o=>{ const s=o.supervisor||"—"; if(!sups[s]) sups[s]={n:0,val:0,centro:o.centro}; sups[s].n++;sups[s].val+=o.valor; });
+  const sorted=Object.entries(sups).sort((a,b)=>b[1].val-a[1].val).slice(0,6);
+  const maxN=sorted[0]?.[1].n||1;
+  const cols=["#E24B4A","#E24B4A","#EF9F27","#EF9F27","#378ADD","#2D6A4F"];
+  document.getElementById(id).innerHTML=sorted.map(([s,v],i)=>{
+    const col=cols[i]||"#888"; const init=s.split(" ").slice(0,2).map(w=>w[0]).join("").toUpperCase();
+    return "<div style='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);'><div class='avatar' style='background:"+col+"20;color:"+col+"'>"+init+"</div><div style='flex:1;min-width:0;'><div style='font-weight:500;font-size:12px;'>"+s+"</div><div style='font-size:10px;color:var(--text2);'>"+v.centro+"</div></div><div class='bar-track' style='width:100px;flex-shrink:0;'><div class='bar-fill' style='width:"+Math.round(v.n/maxN*100)+"%;background:"+col+"'></div></div><span class='badge' style='background:"+col+"20;color:"+col+";'>"+v.n+" obras</span><span style='font-size:10px;color:var(--text3);font-family:var(--mono);min-width:55px;text-align:right;'>"+fmtShort(v.val)+"</span></div>";
+  }).join("")||"<div class='empty' style='padding:1rem'>—</div>";
+}
+
+function populateFilters() {
+  const ids=["filtro-centro","filtro-etapa","filtro-motivo","filtro-supervisor"];
+  const fields=["centro","etapa","motivoPendencia","supervisor"];
+  ids.forEach((id,i)=>{
+    const sel=document.getElementById(id); if(!sel) return;
+    const cur=sel.value;
+    while(sel.options.length>1) sel.remove(1);
+    [...new Set(state.obras.map(o=>o[fields[i]]))].filter(Boolean).sort().forEach(v=>{const op=document.createElement("option");op.value=v;op.textContent=v;sel.appendChild(op);});
+    if(cur) sel.value=cur;
+  });
+  filtersPopulated=true;
+}
+
+function renderAcompanhamento() {
+  if (!filtersPopulated) populateFilters();
+  const status=document.getElementById("filtro-status")?.value||"";
+  const centro=document.getElementById("filtro-centro")?.value||"";
+  const etapa=document.getElementById("filtro-etapa")?.value||"";
+  const motivo=document.getElementById("filtro-motivo")?.value||"";
+  const supervisor=document.getElementById("filtro-supervisor")?.value||"";
+  const filtered=state.obras.filter(o=>{
+    if (status==="critico") return o.diasAtraso>=90&&o.status!=="Resolvido";
+    if (status&&o.status!==status) return false;
+    if (centro&&o.centro!==centro) return false;
+    if (etapa&&o.etapa!==etapa) return false;
+    if (motivo&&o.motivoPendencia!==motivo) return false;
+    if (supervisor&&o.supervisor!==supervisor) return false;
+    return true;
+  });
+  document.getElementById("acomp-empty").style.display=filtered.length?"none":"block";
+  document.getElementById("acomp-count").textContent=filtered.length+" obras exibidas de "+state.obras.length+" total";
+  document.getElementById("acomp-body").innerHTML=filtered.map(o=>{
+    const idx=state.obras.indexOf(o);
+    const isEdit=editingSet.has(idx), isPend=pendentesSet.has(idx), isSalvo=salvosSet.has(idx)&&!isPend;
+    const rowCls=isPend?"row-pendente":isSalvo?"row-salvo":"";
+    const dc=o.diasAtraso>=90?"badge-danger":o.diasAtraso>=30?"badge-warn":"badge-ok";
+    const sc=o.status==="Resolvido"?"badge-ok":o.status==="Em resolução"?"badge-trat":o.diasAtraso>=90?"badge-danger":"badge-warn";
+    const stateTag=isPend?"<span class='row-state rs-pend'>pendente</span>":isSalvo?"<span class='row-state rs-ok'>salvo ✓</span>":"";
+    const etapaShort=o.etapa.replace("00 - ","").replace("10 - ","").replace("04 - ","").split(".")[0];
+    if (isEdit) {
+      return "<tr class='"+rowCls+"'><td class='mono'>"+o.gpm+"</td><td class='mono' style='color:var(--blue)'>"+o.ot+"</td><td style='max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"+o.obra+"</td><td style='font-size:11px'>"+o.municipio+"</td><td><span class='badge badge-neutral'>"+o.centro.replace("C.S - ","")+"</span></td><td style='font-size:11px'>"+o.supervisor+"</td><td style='font-size:11px;color:var(--text2)'>"+etapaShort+"</td><td><span class='badge badge-neutral'>"+o.porte+"</span></td><td style='font-size:11px'>"+o.motivoPendencia+"</td><td style='max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;color:var(--text2);' title='"+o.detalhamento+"'>"+o.detalhamento+"</td><td><span class='badge "+dc+"'>"+o.diasAtraso+"d</span></td><td class='mono'>"+fmtShort(o.valor)+"</td><td><span class='badge "+(o.reprogramacao==="Sim"?"badge-warn":"badge-ok")+"'>"+o.reprogramacao+"</span></td>"
+        +"<td><select class='tbl-input' style='width:110px' onchange='updObra("+idx+","status",this.value)'><option "+(o.status==="Pendente"?"selected":"")+"'>Pendente</option><option "+(o.status==="Em resolução"?"selected":"")+"'>Em resolução</option><option "+(o.status==="Resolvido"?"selected":"")+"'>Resolvido</option><option "+(o.status==="Crítico"?"selected":"")+"'>Crítico</option></select></td>"
+        +"<td><input class='tbl-input' style='width:110px' placeholder='Nome...' value='"+(o.responsavel||"")+"' oninput='updObra("+idx+","responsavel",this.value)'></td>"
+        +"<td><input class='tbl-input' type='date' style='width:120px' value='"+(o.dataResolucao||"")+"' onchange='updObra("+idx+","dataResolucao",this.value)'></td>"
+        +"<td><input class='tbl-input' style='width:140px' placeholder='Observação...' value='"+(o.obs||"")+"' oninput='updObra("+idx+","obs",this.value)'></td>"
+        +"<td style='white-space:nowrap;'>"+stateTag+"<button class='edit-btn' onclick='toggleEdit("+idx+")' title='Fechar'>✕</button></td></tr>";
+    } else {
+      return "<tr class='"+rowCls+"'><td class='mono'>"+o.gpm+"</td><td class='mono' style='color:var(--blue)'>"+o.ot+"</td><td style='max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"+o.obra+"</td><td style='font-size:11px'>"+o.municipio+"</td><td><span class='badge badge-neutral'>"+o.centro.replace("C.S - ","")+"</span></td><td style='font-size:11px'>"+o.supervisor+"</td><td style='font-size:11px;color:var(--text2)'>"+etapaShort+"</td><td><span class='badge badge-neutral'>"+o.porte+"</span></td><td style='font-size:11px'>"+o.motivoPendencia+"</td><td style='max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;color:var(--text2);' title='"+o.detalhamento+"'>"+o.detalhamento+"</td><td><span class='badge "+dc+"'>"+o.diasAtraso+"d</span></td><td class='mono'>"+fmtShort(o.valor)+"</td><td><span class='badge "+(o.reprogramacao==="Sim"?"badge-warn":"badge-ok")+"'>"+o.reprogramacao+"</span></td>"
+        +"<td><span class='badge "+sc+"'>"+o.status+"</span></td>"
+        +"<td style='color:"+(o.responsavel?"var(--text)":"var(--text3)")+"'>"+( o.responsavel||"—")+"</td>"
+        +"<td class='mono' style='font-size:11px;color:"+(o.dataResolucao?"var(--text)":"var(--text3)")+"'>"+(o.dataResolucao?formatDateStr(o.dataResolucao):"—")+"</td>"
+        +"<td style='font-size:11px;color:"+(o.obs?"var(--text)":"var(--text3)")+"'>"+( o.obs||"—")+"</td>"
+        +"<td style='white-space:nowrap;'>"+stateTag+"<button class='edit-btn' onclick='toggleEdit("+idx+")' title='Editar'>✏️</button></td></tr>";
+    }
+  }).join("");
+  updatePendingBadge();
+}
+
+function toggleEdit(idx) {
+  if (editingSet.has(idx)) editingSet.delete(idx); else editingSet.add(idx);
+  renderAcompanhamento();
+}
+
+function updObra(idx, field, value) {
+  state.obras[idx][field]=value;
+  if (field==="dataResolucao"&&value&&state.obras[idx].status==="Pendente") state.obras[idx].status="Em resolução";
+  pendentesSet.add(idx); salvosSet.delete(idx);
+  updatePendingBadge();
+}
+
+function updatePendingBadge() {
+  const n=pendentesSet.size;
+  const badge=document.getElementById("pending-badge"), txt=document.getElementById("pending-txt"), btn=document.getElementById("btn-salvar");
+  if (n>0) { badge.style.display="inline-flex"; txt.textContent=n+(n===1?" alteração pendente":" alterações pendentes"); btn.innerHTML="&#128190; Salvar "+n+(n===1?" alteração":" alterações"); }
+  else { badge.style.display="none"; btn.innerHTML="&#128190; Salvar e sincronizar"; }
+}
+
+async function salvarTratativas() {
+  if (!configured) { showToast("⚙️ Configure a URL primeiro"); return; }
+  if (!pendentesSet.size) { showToast("Nenhuma alteração pendente"); return; }
+  const btn=document.getElementById("btn-salvar");
+  btn.disabled=true; btn.innerHTML="<span class='spinner'></span> Salvando...";
+  try {
+    const result=await apiPost("saveTratativas", state.obras.map(o=>({id:o.id,status:o.status,responsavel:o.responsavel,dataResolucao:o.dataResolucao,obs:o.obs})));
+    if (result&&result.ok) { pendentesSet.forEach(i=>salvosSet.add(i)); pendentesSet.clear(); editingSet.clear(); showToast("✅ Salvo e sincronizado!"); await sincronizar(true); }
+    else throw new Error(result?.error||"erro");
+  } catch(e) { showToast("❌ Erro: "+e.message); }
+  btn.disabled=false; updatePendingBadge();
+}
+
+function renderHierarquia() {
+  const fc=document.getElementById("hier-filtro-centro")?.value||"";
+  const pendentes=state.obras.filter(o=>o.status!=="Resolvido"&&(!fc||o.centro===fc));
+  document.getElementById("hier-count").textContent=fc?pendentes.length+" obras pendentes em "+fc:"";
+  renderBarChart2("hier-centro", pendentes, "centro");
+  renderBarChart2("hier-etapa", pendentes, "etapa");
+  renderBarChart2("hier-motivo", pendentes, "motivoPendencia");
+  renderBarChart2("hier-porte", pendentes, "porte");
+  renderSupervisores("hier-supervisor", pendentes);
+}
+
+function renderBarChart2(id, items, field) {
+  const counts={};
+  items.forEach(o=>{ const v=o[field]||"—"; counts[v]=(counts[v]||0)+1; });
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max=sorted[0]?.[1]||1;
+  document.getElementById(id).innerHTML=sorted.map(([k,n])=>"<div class='bar-row'><div class='bar-label' title='"+k+"'>"+k+"</div><div class='bar-track'><div class='bar-fill' style='width:"+Math.round(n/max*100)+"%'></div></div><div class='bar-count'>"+n+"</div></div>").join("")||"<div class='empty' style='padding:1rem'>—</div>";
+}
+
+function renderHistorico() {
+  const cargas=state.cargas;
+  document.getElementById("historico-list").innerHTML=cargas.length?[...cargas].reverse().map(c=>"<div class='hist-row'><span class='hist-date'>"+c.data+"</span>"+(parseInt(c.novas)>0?"<span class='badge badge-new'>+"+c.novas+" novas</span>":"")+(parseInt(c.removidas)>0?"<span class='badge badge-ok'>&#10003;"+c.removidas+" resolvidas</span>":"")+"<span style='font-size:12px;color:var(--text2);'>&#8594; "+c.pendentes+" pendentes</span><span style='font-family:var(--mono);font-size:11px;color:var(--text3);'>"+fmtValor(parseFloat(c.valorPendente)||0)+"</span></div>").join(""):"<div class='empty'><div class='empty-icon'>&#128197;</div>Nenhuma carga ainda</div>";
+  const pers=state.obras.filter(o=>o.status!=="Resolvido"&&cargas.length>1);
+  document.getElementById("persistentes-list").innerHTML=pers.length?"<div class='table-wrap'><table><thead><tr><th>GPM</th><th>OT</th><th>Supervisor</th><th>1ª vez</th><th>Dias</th></tr></thead><tbody>"+pers.sort((a,b)=>b.diasAtraso-a.diasAtraso).slice(0,12).map(o=>"<tr><td class='mono'>"+o.gpm+"</td><td class='mono'>"+o.ot+"</td><td style='font-size:11px'>"+o.supervisor+"</td><td style='font-size:11px;color:var(--text3)'>"+o.firstSeen+"</td><td><span class='badge "+(o.diasAtraso>=90?"badge-danger":"badge-warn")+"'>"+o.diasAtraso+"d</span></td></tr>").join("")+"</tbody></table></div>":"<div class='empty'><div class='empty-icon'>✅</div>Nenhuma obra persistente</div>";
+  document.getElementById("log-list").innerHTML=state.log.length?state.log.map(l=>"<div style='display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;'><span style='color:var(--text3);min-width:80px;font-family:var(--mono);'>"+l.data+"</span><span>"+l.msg+"</span></div>").join(""):"<div class='empty'>Nenhuma atividade</div>";
+}
+
+async function limparHistorico() {
+  if (!confirm("Limpar todo o histórico de cargas e log? As obras e tratativas não serão afetadas.")) return;
+  if (!configured) { showToast("⚙️ Configure a URL primeiro"); return; }
+  try {
+    const result=await apiPost("limparHistorico",{});
+    if (result&&result.ok) { state.cargas=[]; state.log=[]; renderHistorico(); showToast("✅ Histórico limpo!"); }
+    else throw new Error(result?.error||"erro");
+  } catch(e) { showToast("❌ Erro: "+e.message); }
+}
+
+function handleDrop(e) { e.preventDefault(); document.getElementById("upload-zone").classList.remove("drag"); processFile(e.dataTransfer.files[0]); }
+function handleFile(e) { processFile(e.target.files[0]); }
+
+function processFile(file) {
+  if (!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(e.target.result,{type:"array"});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+    let hi=-1;
+    for (let i=0;i<rows.length;i++) if (rows[i]&&rows[i].some(c=>String(c).toLowerCase().includes("cód")||String(c).toLowerCase().includes("cod")||String(c).toLowerCase().includes("gpm"))) { hi=i; break; }
+    if (hi===-1) { showToast("❌ Formato não reconhecido"); return; }
+    const hdr=rows[hi].map(h=>String(h||"").trim().toLowerCase());
+    const ci={
+      gpm: hdr.findIndex(h=>h.includes("gpm")||h.includes("cód")||h.includes("cod")),
+      dept: hdr.findIndex(h=>h.includes("departamento")),
+      centro: hdr.findIndex(h=>h.includes("centro")),
+      etapa: hdr.findIndex(h=>h.includes("etapa")),
+      porte: hdr.findIndex(h=>h.includes("porte")),
+      chefe: hdr.findIndex(h=>h.includes("chefe")),
+      ot: hdr.findIndex(h=>h.includes("ot")&&!h.includes("retorno")),
+      obra: hdr.findIndex(h=>h.includes("obra")),
+      municipio: hdr.findIndex(h=>h.includes("munic")),
+      supervisor: hdr.findIndex(h=>h.includes("supervisor")),
+      dataEnerg: hdr.findIndex(h=>h.includes("energiz")),
+      motivoPend: hdr.findIndex(h=>h.includes("motivo")),
+      detalh: hdr.findIndex(h=>h.includes("detalh")),
+      solicit: hdr.findIndex(h=>h.includes("solicit")),
+      retorno: hdr.findIndex(h=>h.includes("retorno")),
+      dias: hdr.findIndex(h=>h.includes("dias")),
+      valor: hdr.findIndex(h=>h.includes("valor")),
+      reprog: hdr.findIndex(h=>h.includes("reprog")&&!h.includes("data")&&!h.includes("detalh")&&!h.includes("data")),
+    };
+    const newObras=[];
+    for (let i=hi+1;i<rows.length;i++) {
+      const r=rows[i]; if (!r||!r.length) continue;
+      const gpm=String(r[ci.gpm]||"").trim();
+      if (!gpm||gpm.toLowerCase()==="total"||gpm.toLowerCase().includes("filtro")) continue;
+      if (isNaN(parseInt(gpm))) continue;
+      const ot=String(r[ci.ot]||"").trim();
+      const id=gpm+"|"+ot;
+      const dias=parseInt(r[ci.dias])||0;
+      newObras.push({
+        id, gpm, ot,
+        obra: String(r[ci.obra]||"").trim(),
+        municipio: String(r[ci.municipio]||"").trim(),
+        centro: String(r[ci.centro]||"").trim(),
+        etapa: String(r[ci.etapa]||"").trim(),
+        porte: String(r[ci.porte]||"").trim(),
+        chefeTurma: String(r[ci.chefe]||"").trim(),
+        supervisor: String(r[ci.supervisor]||"").trim(),
+        dataEnergizacao: String(r[ci.dataEnerg]||"").trim(),
+        motivoPendencia: String(r[ci.motivoPend]||"").trim(),
+        detalhamento: String(r[ci.detalh]||"").trim(),
+        diasAtraso: dias,
+        valor: parseFloat(r[ci.valor])||0,
+        reprogramacao: String(r[ci.reprog]||"").trim(),
+        status: dias>=90?"Crítico":"Pendente",
+      });
+    }
+    if (!newObras.length) { showToast("❌ Nenhuma obra encontrada"); return; }
+    const existIds=new Set(state.obras.map(o=>o.id));
+    const newIds=new Set(newObras.map(o=>o.id));
+    const novas=newObras.filter(o=>!existIds.has(o.id));
+    const removidas=state.obras.filter(o=>!newIds.has(o.id));
+    const mantidas=newObras.filter(o=>existIds.has(o.id));
+    pendingImport={newObras,novas,removidas,mantidas};
+    document.getElementById("preview-area").style.display="block";
+    document.getElementById("diff-area").innerHTML="<div style='font-size:13px;font-weight:500;margin-bottom:10px;'>"+newObras.length+" obras encontradas</div><div style='display:flex;flex-direction:column;gap:8px;font-size:13px;'>"+(novas.length?"<div>✦ <span class='badge badge-new'>+"+novas.length+" novas</span> entrarão como pendentes</div>":"")+(mantidas.length?"<div>≡ <span class='badge badge-neutral'>"+mantidas.length+" mantidas</span> — tratativas preservadas</div>":"")+(removidas.length?"<div>✓ <span class='badge badge-ok'>"+removidas.length+" saíram</span> — não aparecem mais</div>":"")+"</div>";
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function confirmarImportacao() {
+  if (!pendingImport) return;
+  if (!configured) { showToast("⚙️ Configure a URL primeiro"); return; }
+  const btn=document.getElementById("btn-confirmar");
+  btn.disabled=true; btn.innerHTML="<span class='spinner'></span> Enviando...";
+  const today=new Date().toLocaleDateString("pt-BR");
+  try {
+    const result=await apiPost("importCarga",{obras:pendingImport.newObras,data:today});
+    if (result&&result.ok) { showToast("✅ "+result.total+" obras importadas"); pendingImport=null; document.getElementById("preview-area").style.display="none"; document.getElementById("file-input").value=""; await sincronizar(true); showTab("dashboard",document.querySelectorAll("nav button")[0]); }
+    else throw new Error(result?.error||"erro");
+  } catch(e) { showToast("❌ Erro: "+e.message); }
+  btn.disabled=false; btn.innerHTML="Confirmar e enviar para o Sheets";
+}
+
+function cancelarImport() { pendingImport=null; document.getElementById("preview-area").style.display="none"; document.getElementById("file-input").value=""; }
+
+function exportarCSV() {
+  if (!state.obras.length) { showToast("Nenhum dado"); return; }
+  const h=["GPM","OT","Obra","Município","Centro","Supervisor","Etapa","Porte","Motivo","Detalhamento","Dias","Valor","Reprogramação","Status","Responsável","Data Resolução","Observação"];
+  const rows=state.obras.map(o=>[o.gpm,o.ot,o.obra,o.municipio,o.centro,o.supervisor,o.etapa,o.porte,o.motivoPendencia,o.detalhamento,o.diasAtraso,o.valor,o.reprogramacao,o.status,o.responsavel,o.dataResolucao,o.obs]);
+  const csv=[h,...rows].map(r=>r.map(c=>"\""+String(c||"").replace(/"/g,"\"\"")+"\"\"").join(",")).join("\n");
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"})); a.download="pendencias_"+new Date().toISOString().split("T")[0]+".csv"; a.click();
+}
+
+function fmtValor(v) { return "R$ "+(parseFloat(v)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtShort(v) { const n=parseFloat(v)||0; return n>=1000?"R$ "+(n/1000).toFixed(1)+"k":"R$ "+Math.round(n); }
+function showToast(msg) { const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3500); }
+
+window.addEventListener("beforeunload",function(e){ if(pendentesSet&&pendentesSet.size>0){e.preventDefault();e.returnValue="Você tem alterações não salvas.";return e.returnValue;} });
+
+if (configured) { document.getElementById("cfg-banner").style.display="none"; sincronizar(); setInterval(sincronizar,30000); }
+else setSyncStatus("error");
+</script>
+</body>
+</html>
