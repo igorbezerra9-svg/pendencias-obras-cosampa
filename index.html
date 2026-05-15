@@ -109,6 +109,18 @@
   .hist-date { min-width: 90px; font-family: var(--mono); font-size: 11px; color: var(--text2); }
   .edit-btn { background: none; border: none; cursor: pointer; padding: 2px 4px; border-radius: 4px; color: var(--text3); font-size: 13px; line-height: 1; transition: background .15s; }
   .edit-btn:hover { background: var(--surface2); color: var(--text); }
+  .wa-btn { background: none; border: none; cursor: pointer; padding: 2px 4px; border-radius: 4px; color: #25D366; font-size: 15px; line-height: 1; transition: background .15s; }
+  .wa-btn:hover { background: #e8fdf0; }
+  .wa-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 500; display: flex; align-items: center; justify-content: center; }
+  .wa-modal-box { background: var(--surface); border-radius: 12px; padding: 1.5rem; width: 360px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+  .wa-modal-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .wa-modal-sub { font-size: 12px; color: var(--text2); margin-bottom: 1rem; }
+  .wa-input { width: 100%; font-family: var(--font); font-size: 14px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 1rem; }
+  .wa-input:focus { outline: none; border-color: #25D366; }
+  .wa-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .wa-send { background: #25D366; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .wa-send:hover { background: #1da851; } line-height: 1; transition: background .15s; }
+  .edit-btn:hover { background: var(--surface2); color: var(--text); }
   .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; flex-shrink: 0; }
   #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--text); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; pointer-events: none; z-index: 999; }
   #toast.show { opacity: 1; transform: translateY(0); }
@@ -351,7 +363,10 @@
     </div>
 
     <div class="card">
-      <div class="card-title">Linha do tempo — por carga</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:0;">Linha do tempo — por carga</div>
+        <button class="wa-btn" style="font-size:13px;display:flex;align-items:center;gap:6px;border:1px solid #25D366;padding:6px 12px;border-radius:6px;color:#25D366;font-weight:500;" onclick="openWaConsolidado()">💬 Enviar atualização</button>
+      </div>
       <div style="display:flex;gap:6px;margin-bottom:12px;">
         <button class="btn" id="cons-tab-qtd" onclick="switchConsChart('qtd')" style="font-size:12px;padding:5px 12px;background:var(--text);color:#fff;border-color:var(--text);">Quantidade</button>
         <button class="btn" id="cons-tab-val" onclick="switchConsChart('valor')" style="font-size:12px;padding:5px 12px;">Valor (R$)</button>
@@ -391,6 +406,31 @@
 </main>
 
 <div id="toast"></div>
+
+<div id="wa-modal" style="display:none;" class="wa-modal" onclick="if(event.target===this)closeWaModal()">
+  <div class="wa-modal-box">
+    <div class="wa-modal-title">📱 Enviar via WhatsApp</div>
+    <div class="wa-modal-sub" id="wa-modal-sub">Obra — GPM</div>
+    <input type="tel" id="wa-phone" class="wa-input" placeholder="Ex: 88999999999 (com DDD)" />
+    <div class="wa-actions">
+      <button class="btn" onclick="closeWaModal()">Cancelar</button>
+      <button class="wa-send" onclick="sendWhatsApp()">📤 Abrir WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<div id="wa-cons-modal" style="display:none;" class="wa-modal" onclick="if(event.target===this)closeWaConsModal()">
+  <div class="wa-modal-box" style="width:420px;">
+    <div class="wa-modal-title">📊 Enviar atualização diária</div>
+    <div class="wa-modal-sub">Resumo do consolidado será enviado via WhatsApp</div>
+    <div id="wa-cons-preview" style="background:var(--surface2);border-radius:8px;padding:10px;font-size:11px;font-family:var(--mono);margin-bottom:1rem;max-height:200px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;"></div>
+    <input type="tel" id="wa-cons-phone" class="wa-input" placeholder="Ex: 88999999999 (com DDD)" />
+    <div class="wa-actions">
+      <button class="btn" onclick="closeWaConsModal()">Cancelar</button>
+      <button class="wa-send" onclick="sendWaConsolidado()">📤 Abrir WhatsApp</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const configured = typeof APPS_SCRIPT_URL !== "undefined" && APPS_SCRIPT_URL !== "COLE_SUA_URL_AQUI" && APPS_SCRIPT_URL.includes("script.google.com");
@@ -623,7 +663,7 @@ function renderAcompanhamento() {
         +"<td style='color:"+(o.responsavel?"var(--text)":"var(--text3)")+"'>"+( o.responsavel||"—")+"</td>"
         +"<td class='mono' style='font-size:11px;color:"+(o.dataResolucao?"var(--text)":"var(--text3)")+"'>"+(o.dataResolucao?formatDateStr(o.dataResolucao):"—")+"</td>"
         +"<td style='font-size:11px;color:"+(o.obs?"var(--text)":"var(--text3)")+"'>"+( o.obs||"—")+"</td>"
-        +"<td style='white-space:nowrap;'>"+stateTag+"<button class='edit-btn' onclick='toggleEdit("+idx+")' title='Editar'>✏️</button></td></tr>";
+        +"<td style='white-space:nowrap;'>"+stateTag+"<button class='wa-btn' onclick='openWaModal("+idx+")' title='Enviar WhatsApp'>💬</button><button class='edit-btn' onclick='toggleEdit("+idx+")' title='Editar'>✏️</button></td></tr>";
     }
   }).join("");
   updatePendingBadge();
@@ -864,12 +904,14 @@ function renderConsolidado() {
       data: label,
       pendentes: parseInt(c.pendentes)||0,
       resolvidas: resolvidasTotal,
-      emTrat: 0,
+      emTrat: parseInt(c.emTrat)||0,
       novas: parseInt(c.novas)||0,
       reinc: 0,
       tipo: 'carga',
       valorPend: parseFloat(c.valorPendente)||0,
       valorRes: 0,
+      valorNovas: parseFloat(c.valorNovas)||0,
+      valorTrat: parseFloat(c.valorTrat)||0,
       sortKey: formatCargaDate(c.data).split('/').reverse().join('') + String(cargaCount[key]).padStart(3,'0')
     });
   });
@@ -889,6 +931,7 @@ function renderConsolidado() {
       tipo: 'snapshot',
       valorPend: parseFloat(s.valorPend)||0,
       valorRes: 0,
+      valorTrat: parseFloat(s.valorTrat)||0,
       sortKey: key.split('/').reverse().join('') + '500'
     });
   });
@@ -902,13 +945,15 @@ function renderConsolidado() {
   // Só mostra "hoje" se for um dia diferente das cargas E tiver mudança
   const hojeEhNovoDia = !cargaDates.has(hojeFormatted);
   if (hojeEhNovoDia && (pendentes !== lastCargaPend || resolvidas > 0)) {
+    const vTrat = items.filter(o=>o.status==='Em resolução'||o.status==='Resolvido').reduce((s,o)=>s+(o.valor||0),0);
+    const nTrat = items.filter(o=>o.status==='Em resolução'||o.status==='Resolvido').length;
     allPoints.push({
       data: hojeFormatted,
-      pendentes, resolvidas: hojeResolvidas, emTrat,
+      pendentes, resolvidas: hojeResolvidas, emTrat: nTrat,
       novas: 0,
       reinc: items.filter(o=>(o.reincidencias||0)>0&&o.status!=='Resolvido').length,
       tipo: 'hoje',
-      valorPend: vPend, valorRes: vRes,
+      valorPend: vPend, valorRes: vRes, valorTrat: vTrat,
       sortKey: hojeFormatted.split('/').reverse().join('') + '999'
     });
   }
@@ -941,8 +986,9 @@ function renderConsolidado() {
 
   // Legend
   document.getElementById('cons-legend').innerHTML = [
-    {color:'#1A1916',label:'Pendentes'},{color:'#2D6A4F',label:'Resolvidas'},
-    {color:'#378ADD',label:'Novas entradas'},{color:'#C2410C',label:'Reincidentes'}
+    {color:'#1A1916',label:'Pendentes'},{color:'#2D6A4F',label:'Saíram/Resolvidas'},
+    {color:'#378ADD',label:'Novas entradas'},{color:'#C2410C',label:'Reincidentes'},
+    {color:'#5B21B6',label:'Tratadas pelas Adms'}
   ].map(l=>'<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);"><div style="width:10px;height:10px;border-radius:2px;background:'+l.color+'"></div>'+l.label+'</div>').join('');
 
   const labels  = points.map(p=>formatCargaDate(p.data).split('/').slice(0,2).join('/'));
@@ -964,6 +1010,7 @@ function renderConsolidado() {
       {label:'Resolvidas', data:datRes, backgroundColor:'#2D6A4F', borderRadius:3, borderSkipped:false},
       {label:'Novas entradas', data:datNovas, backgroundColor:'#378ADD', borderRadius:3, borderSkipped:false},
       {label:'Reincidentes', data:datReinc, backgroundColor:'#C2410C', borderRadius:3, borderSkipped:false},
+      {label:'Tratadas pelas Adms', data:datTrat, backgroundColor:'#5B21B6', borderRadius:3, borderSkipped:false},
     ]},
     options:{
       responsive:true, maintainAspectRatio:false,
@@ -994,11 +1041,10 @@ function renderConsolidado() {
 
   // Valor chart
   // compute valorRes from snapshots properly
-  const datVResFinal = points.map((p,i) => {
-    if (p.valorRes && p.valorRes > 0) return Math.round(p.valorRes);
-    // estimate from resolvidas ratio
-    const totalV = p.valorPend + (p.valorRes||0);
-    return Math.round(p.resolvidas > 0 ? (totalV * p.resolvidas / Math.max(p.pendentes+p.resolvidas,1)) : 0);
+  const datVNovas = points.map(p => Math.round(p.valorNovas||0));
+  const datTrat  = points.map(p => parseInt(p.emTrat)||0);
+  const datVTrat = points.map(p => Math.round(p.valorTrat||0));
+  const datVResFinal = points.map(p => Math.round(p.valorRes||0));
   });
 
   if (consChartVal) { consChartVal.destroy(); consChartVal = null; }
@@ -1008,6 +1054,8 @@ function renderConsolidado() {
     data:{labels, datasets:[
       {label:'Valor pendente', data:datVPend, backgroundColor:'#1A1916', borderRadius:3, borderSkipped:false},
       {label:'Valor resolvido', data:datVResFinal, backgroundColor:'#2D6A4F', borderRadius:3, borderSkipped:false},
+      {label:'Valor novas entradas', data:datVNovas, backgroundColor:'#378ADD', borderRadius:3, borderSkipped:false},
+      {label:'Valor tratado Adms', data:datVTrat, backgroundColor:'#5B21B6', borderRadius:3, borderSkipped:false},
     ]},
     options:{
       responsive:true, maintainAspectRatio:false,
@@ -1080,6 +1128,138 @@ function exportarConsolidadoCSV() {
   a.download = 'consolidado_obras_'+new Date().toISOString().split('T')[0]+'.csv';
   a.click();
   showToast('✅ CSV exportado!');
+}
+
+
+let waCurrentIdx = null;
+
+function openWaModal(idx) {
+  const items = state.obras;
+  const o = items[idx];
+  waCurrentIdx = idx;
+  document.getElementById('wa-modal-sub').textContent = 'OS ' + o.gpm + ' — ' + o.obra;
+  document.getElementById('wa-phone').value = '';
+  document.getElementById('wa-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('wa-phone').focus(), 100);
+}
+
+function closeWaModal() {
+  document.getElementById('wa-modal').style.display = 'none';
+  waCurrentIdx = null;
+}
+
+function sendWhatsApp() {
+  const phone = document.getElementById('wa-phone').value.replace(/\D/g,'');
+  if (!phone || phone.length < 10) { showToast('⚠️ Informe um número válido com DDD'); return; }
+  const items = state.obras;
+  const o = items[waCurrentIdx];
+  const msg = buildWaMsg(o);
+  const url = 'https://wa.me/55' + phone + '?text=' + encodeURIComponent(msg);
+  window.open(url, '_blank');
+  closeWaModal();
+}
+
+function buildWaMsg(o) {
+  return '*🟡 Pendência Técnica — Ação Necessária*\n\n'
+    + 'Olá! Identificamos uma obra com pendência técnica referente à sua equipe:\n\n'
+    + '📋 *GPM:* ' + o.gpm + '\n'
+    + '📄 *OT:* ' + o.ot + '\n'
+    + '🏗️ *Obra:* ' + o.obra + '\n'
+    + '📍 *Município:* ' + o.municipio + '\n'
+    + '👤 *Supervisor:* ' + o.supervisor + '\n'
+    + '⏰ *Dias aguardando:* ' + o.diasAtraso + ' dias' + (o.diasAtraso >= 90 ? ' *(Status: CRÍTICO)*' : '') + '\n'
+    + '❌ *Motivo da pendência:* ' + o.motivoPendencia + '\n'
+    + '📝 *Detalhamento:* ' + o.detalhamento + '\n'
+    + '💰 *Valor da obra:* ' + fmtValor(o.valor) + '\n\n'
+    + 'Por gentileza, nos informe uma previsão para regularização desta pendência.\n\n'
+    + 'Qualquer dúvida estamos à disposição. Obrigado! 🙏';
+}
+
+function openWaConsolidado() {
+  const msg = buildWaConsolidado();
+  document.getElementById('wa-cons-preview').textContent = msg;
+  document.getElementById('wa-cons-phone').value = '';
+  document.getElementById('wa-cons-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('wa-cons-phone').focus(), 100);
+}
+
+function closeWaConsModal() {
+  document.getElementById('wa-cons-modal').style.display = 'none';
+}
+
+function sendWaConsolidado() {
+  const phone = document.getElementById('wa-cons-phone').value.replace(/\D/g,'');
+  if (!phone || phone.length < 10) { showToast('⚠️ Informe um número válido com DDD'); return; }
+  const msg = buildWaConsolidado();
+  const url = 'https://wa.me/55' + phone + '?text=' + encodeURIComponent(msg);
+  window.open(url, '_blank');
+  closeWaConsModal();
+}
+
+function buildWaConsolidado() {
+  const cargas = state.cargas || [];
+  const snaps  = state.snapshots || [];
+  const obras  = state.obras;
+  let lines = ['*📊 Atualização Diária — Pendências Técnicas*', ''];
+
+  const cargasByDate = {};
+  cargas.forEach(c => { const key = formatCargaDate(c.data); cargasByDate[key] = (cargasByDate[key]||0) + 1; });
+
+  const allPoints = [];
+  cargas.forEach(c => {
+    const key = formatCargaDate(c.data);
+    allPoints.push({
+      data: key, pendentes: parseInt(c.pendentes)||0,
+      resolvidas: parseInt(c.removidas)||0,
+      novas: parseInt(c.novas)||0, tratadas: 0,
+      valorPend: parseFloat(c.valorPendente)||0, valorTrat: 0, tipo: 'carga'
+    });
+  });
+
+  snaps.forEach(s => {
+    const key = formatCargaDate(s.data);
+    if (cargasByDate[key]) return;
+    allPoints.push({
+      data: key, pendentes: parseInt(s.pendentes)||0,
+      resolvidas: parseInt(s.resolvidas)||0,
+      novas: 0, tratadas: parseInt(s.emTrat)||0,
+      valorPend: parseFloat(s.valorPend)||0,
+      valorTrat: parseFloat(s.valorTrat)||0, tipo: 'snapshot'
+    });
+  });
+
+  const hojeFormatted = formatCargaDate(new Date().toLocaleDateString('pt-BR'));
+  if (!cargasByDate[hojeFormatted]) {
+    const pendentes = obras.filter(o=>o.status!=='Resolvido').length;
+    const resolvidas = obras.filter(o=>o.status==='Resolvido').length;
+    const emTrat = obras.filter(o=>o.status==='Resolvido'||o.status==='Em resolução').length;
+    const vPend = obras.filter(o=>o.status!=='Resolvido').reduce((s,o)=>s+(o.valor||0),0);
+    const vTrat = obras.filter(o=>o.status==='Resolvido'||o.status==='Em resolução').reduce((s,o)=>s+(o.valor||0),0);
+    allPoints.push({
+      data: hojeFormatted, pendentes, resolvidas, novas: 0,
+      tratadas: emTrat, valorPend: vPend, valorTrat: vTrat, tipo: 'hoje'
+    });
+  }
+
+  const sorted = allPoints.sort((a,b) => a.data.split('/').reverse().join('').localeCompare(b.data.split('/').reverse().join('')));
+
+  sorted.forEach(p => {
+    let line = '*' + p.data + '* — ' + p.pendentes + ' pendentes';
+    if (p.resolvidas > 0) line += ' — ' + p.resolvidas + ' resolvidas';
+    if (p.novas > 0) line += ' — ' + p.novas + ' novas';
+    if (p.tratadas > 0) line += ' — ' + p.tratadas + ' tratadas pelas Adms';
+    if (p.tipo === 'hoje' || p.tipo === 'snapshot') {
+      line += ' — R$ ' + p.valorPend.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' *(previsto)*';
+      if (p.valorTrat > 0) line += ' — R$ ' + p.valorTrat.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' já marcado pelas Adms';
+    } else {
+      line += ' — R$ ' + p.valorPend.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+    lines.push(line);
+  });
+
+  lines.push('');
+  lines.push('_Atualização gerada em ' + new Date().toLocaleString('pt-BR') + '_');
+  return lines.join('\n');
 }
 
 function showToast(msg) { const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3500); }
