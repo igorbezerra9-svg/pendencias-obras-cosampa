@@ -1159,18 +1159,20 @@ function sendWhatsApp() {
 }
 
 function buildWaMsg(o) {
-  return '*\u26a0\ufe0f Pend\u00eancia T\u00e9cnica \u2014 A\u00e7\u00e3o Necess\u00e1ria*\n\n'
-    + 'Ol\u00e1! Identificamos uma obra com pend\u00eancia t\u00e9cnica referente \u00e0 sua equipe:\n\n'
-    + '\U0001f522 *GPM:* ' + o.gpm + '\n'
-    + '\U0001f4c4 *OT:* ' + o.ot + '\n'
-    + '\U0001f3d7\ufe0f *Obra:* ' + o.obra + '\n'
-    + '\U0001f4cd *Munic\u00edpio:* ' + o.municipio + '\n'
-    + '\U0001f465 *Supervisor:* ' + o.supervisor + '\n'
-    + '\u23f3 *Dias aguardando:* ' + o.diasAtraso + ' dias' + (o.diasAtraso >= 90 ? ' *(Status: CR\u00cdTICO)*' : '') + '\n'
-    + '\u274c *Motivo:* ' + o.motivoPendencia + '\n'
-    + '\U0001f4dd *O que precisa ser feito:* ' + o.detalhamento + '\n'
-    + '\U0001f4b0 *Valor da obra:* ' + fmtValor(o.valor) + '\n\n'
-    + 'Por gentileza, nos informe uma previs\u00e3o para regulariza\u00e7\u00e3o desta pend\u00eancia.';
+  const nl = '\n';
+  const critico = o.diasAtraso >= 90 ? ' *(Status: CRÍTICO)*' : '';
+  return '*⚠️ Pendência Técnica — Ação Necessária*' + nl + nl
+    + 'Olá! Identificamos uma obra com pendência técnica referente à sua equipe:' + nl + nl
+    + '🔢 *GPM:* ' + o.gpm + nl
+    + '📄 *OT:* ' + o.ot + nl
+    + '🏗️ *Obra:* ' + o.obra + nl
+    + '📍 *Município:* ' + o.municipio + nl
+    + '👥 *Supervisor:* ' + o.supervisor + nl
+    + '⏳ *Dias aguardando:* ' + o.diasAtraso + ' dias' + critico + nl
+    + '❌ *Motivo:* ' + o.motivoPendencia + nl
+    + '📝 *O que precisa ser feito:* ' + o.detalhamento + nl
+    + '💰 *Valor da obra:* ' + fmtValor(o.valor) + nl + nl
+    + 'Por gentileza, nos informe uma previsão para regularização desta pendência.';
 }
 
 function openWaConsolidado() {
