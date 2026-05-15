@@ -50,7 +50,13 @@
   .prog-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 4px; }
   .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
   .table-wrap table th:last-child,
-  .table-wrap table td:last-child { position: sticky; right: 0; background: var(--surface); box-shadow: -2px 0 6px rgba(0,0,0,0.06); z-index: 1; }
+  .table-wrap table td:last-child {
+    position: sticky;
+    right: 0;
+    background: var(--surface);
+    box-shadow: -2px 0 6px rgba(0,0,0,0.06);
+    z-index: 1;
+  }
   .table-wrap table thead th:last-child { background: var(--surface2); }
   tr.row-pendente td:last-child { background: #FFFBEB; }
   tr.row-salvo td:last-child { background: #F0FDF4; }
@@ -113,7 +119,8 @@
   .wa-input:focus { outline: none; border-color: #25D366; }
   .wa-actions { display: flex; gap: 8px; justify-content: flex-end; }
   .wa-send { background: #25D366; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
-  .wa-send:hover { background: #1da851; }
+  .wa-send:hover { background: #1da851; } line-height: 1; transition: background .15s; }
+  .edit-btn:hover { background: var(--surface2); color: var(--text); }
   .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; flex-shrink: 0; }
   #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--text); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; pointer-events: none; z-index: 999; }
   #toast.show { opacity: 1; transform: translateY(0); }
@@ -274,14 +281,29 @@
       <span id="hier-count" style="font-size:12px;color:var(--text3);"></span>
     </div>
     <div class="grid2" style="margin-bottom:12px;">
-      <div class="card"><div class="card-title">Por centro de serviço</div><div id="hier-centro"></div></div>
-      <div class="card"><div class="card-title">Por etapa</div><div id="hier-etapa"></div></div>
+      <div class="card">
+        <div class="card-title">Por centro de serviço</div>
+        <div id="hier-centro"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Por etapa</div>
+        <div id="hier-etapa"></div>
+      </div>
     </div>
     <div class="grid2" style="margin-bottom:12px;">
-      <div class="card"><div class="card-title">Por motivo</div><div id="hier-motivo"></div></div>
-      <div class="card"><div class="card-title">Por porte</div><div id="hier-porte"></div></div>
+      <div class="card">
+        <div class="card-title">Por motivo</div>
+        <div id="hier-motivo"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Por porte</div>
+        <div id="hier-porte"></div>
+      </div>
     </div>
-    <div class="card"><div class="card-title">Ranking de supervisores</div><div id="hier-supervisor"></div></div>
+    <div class="card">
+      <div class="card-title">Ranking de supervisores</div>
+      <div id="hier-supervisor"></div>
+    </div>
   </div>
 
   <!-- HISTÓRICO -->
@@ -310,6 +332,7 @@
     <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
       <button class="btn" onclick="exportarConsolidadoCSV()">&#11015; Exportar Consolidado CSV</button>
     </div>
+
     <div class="card" style="margin-bottom:12px;">
       <div class="card-title">Visão geral do período</div>
       <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0;align-items:center;margin-bottom:1.25rem;">
@@ -338,6 +361,7 @@
       <div class="card-title" style="margin-bottom:8px;">Evolução diária</div>
       <div id="cons-lista"><div class="empty"><div class="empty-icon">&#128197;</div>Nenhum dado ainda</div></div>
     </div>
+
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div class="card-title" style="margin-bottom:0;">Linha do tempo — por carga</div>
@@ -348,8 +372,8 @@
         <button class="btn" id="cons-tab-val" onclick="switchConsChart('valor')" style="font-size:12px;padding:5px 12px;">Valor (R$)</button>
       </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;" id="cons-legend"></div>
-      <div style="position:relative;height:260px;" id="cons-wrap-qtd"><canvas id="cons-chart"></canvas></div>
-      <div style="position:relative;height:260px;display:none;" id="cons-wrap-val"><canvas id="cons-chart-val"></canvas></div>
+      <div style="position:relative;height:260px;" id="cons-wrap-qtd"><canvas id="cons-chart" role="img" aria-label="Gráfico de barras mostrando obras pendentes, resolvidas e novas por data de carga.">Evolução de obras ao longo do tempo.</canvas></div>
+      <div style="position:relative;height:260px;display:none;" id="cons-wrap-val"><canvas id="cons-chart-val" role="img" aria-label="Gráfico de barras mostrando valor em R$ pendente e resolvido por data de carga.">Evolução de valor ao longo do tempo.</canvas></div>
     </div>
   </div>
 
@@ -407,6 +431,7 @@
     </div>
   </div>
 </div>
+
 <script>
 const configured = typeof APPS_SCRIPT_URL !== "undefined" && APPS_SCRIPT_URL !== "COLE_SUA_URL_AQUI" && APPS_SCRIPT_URL.includes("script.google.com");
 let state = { obras: [], cargas: [], log: [], snapshots: [] };
@@ -531,8 +556,7 @@ function renderDashboard() {
   const vRes = resolvidas.reduce((s,o)=>s+o.valor,0);
   const vTotal = vPend+vRes;
   const pct = vTotal>0?Math.round(vRes/vTotal*100):0;
-  document.getElementById("metrics-area").innerHTML =
-    "<div class='metric al'><div class='metric-label'>Pendentes</div><div class='metric-value'>"+pendentes.length+"</div><div class='metric-sub'>de "+obras.length+" obras</div></div>"
+  document.getElementById("metrics-area").innerHTML = "<div class='metric al'><div class='metric-label'>Pendentes</div><div class='metric-value'>"+pendentes.length+"</div><div class='metric-sub'>de "+obras.length+" obras</div></div>"
     +"<div class='metric ag'><div class='metric-label'>Resolvidas</div><div class='metric-value'>"+resolvidas.length+"</div><div class='metric-sub'>acumulado</div></div>"
     +"<div class='metric'><div class='metric-label'>Em resolução</div><div class='metric-value'>"+emResolucao.length+"</div><div class='metric-sub'>em andamento</div></div>"
     +"<div class='metric'><div class='metric-label'>Novas (última carga)</div><div class='metric-value'>"+(lastCarga?lastCarga.novas:0)+"</div><div class='metric-sub'>"+(lastCarga?lastCarga.data:"—")+"</div></div>"
@@ -548,6 +572,7 @@ function renderDashboard() {
     const delta = prev-vPend;
     const dw = document.getElementById("evo-delta-wrap");
     if (Math.abs(delta)>0.01) {
+      const cls = delta>0?"delta-good":"delta-bad";
       const bg = delta>0?"var(--green-bg)":"var(--red-bg)"; const col = delta>0?"var(--green)":"var(--red)";
       dw.innerHTML = "<span style='font-size:12px;font-weight:500;padding:2px 8px;border-radius:4px;background:"+bg+";color:"+col+"'>"+(delta>0?"&#8595;":"&#8593;")+" "+fmtValor(Math.abs(delta))+" "+(delta>0?"reduzido":"aumentou")+" desde última carga</span>";
     } else dw.innerHTML="";
@@ -556,9 +581,7 @@ function renderDashboard() {
   renderBarChart("chart-etapa", pendentes, "etapa");
   renderBarChart("chart-motivo", pendentes, "motivoPendencia");
   renderSupervisores("chart-supervisor", pendentes);
-  document.getElementById("criticas-body").innerHTML = criticas.sort((a,b)=>b.diasAtraso-a.diasAtraso).slice(0,10).map(o=>
-    "<tr><td class='mono'>"+o.gpm+"</td><td class='mono' style='color:var(--blue)'>"+o.ot+"</td><td style='max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"+o.obra+"</td><td>"+o.municipio+"</td><td>"+o.centro+"</td><td style='font-size:11px'>"+o.supervisor+"</td><td style='font-size:11px;color:var(--text2)'>"+o.etapa+"</td><td><span class='badge badge-danger'>"+o.diasAtraso+"d</span></td><td class='mono'>"+fmtValor(o.valor)+"</td></tr>"
-  ).join("")||"<tr><td colspan='9' style='text-align:center;color:var(--text3);padding:1.5rem;'>Nenhuma obra crítica 🎉</td></tr>";
+  document.getElementById("criticas-body").innerHTML = criticas.sort((a,b)=>b.diasAtraso-a.diasAtraso).slice(0,10).map(o=>"<tr><td class='mono'>"+o.gpm+"</td><td class='mono' style='color:var(--blue)'>"+o.ot+"</td><td style='max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"+o.obra+"</td><td>"+o.municipio+"</td><td>"+o.centro+"</td><td style='font-size:11px'>"+o.supervisor+"</td><td style='font-size:11px;color:var(--text2)'>"+o.etapa+"</td><td><span class='badge badge-danger'>"+o.diasAtraso+"d</span></td><td class='mono'>"+fmtValor(o.valor)+"</td></tr>").join("")||"<tr><td colspan='9' style='text-align:center;color:var(--text3);padding:1.5rem;'>Nenhuma obra crítica 🎉</td></tr>";
 }
 
 function renderBarChart(id, items, field) {
@@ -566,9 +589,7 @@ function renderBarChart(id, items, field) {
   items.forEach(o=>{ const v=o[field]||"—"; counts[v]=(counts[v]||0)+1; });
   const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
   const max=sorted[0]?.[1]||1;
-  document.getElementById(id).innerHTML=sorted.map(([k,n])=>
-    "<div class='bar-row'><div class='bar-label' title='"+k+"'>"+k+"</div><div class='bar-track'><div class='bar-fill' style='width:"+Math.round(n/max*100)+"%'></div></div><div class='bar-count'>"+n+"</div></div>"
-  ).join("")||"<div class='empty' style='padding:1rem'>—</div>";
+  document.getElementById(id).innerHTML=sorted.map(([k,n])=>"<div class='bar-row'><div class='bar-label' title='"+k+"'>"+k+"</div><div class='bar-track'><div class='bar-fill' style='width:"+Math.round(n/max*100)+"%'></div></div><div class='bar-count'>"+n+"</div></div>").join("")||"<div class='empty' style='padding:1rem'>—</div>";
 }
 
 function renderSupervisores(id, items) {
@@ -582,6 +603,7 @@ function renderSupervisores(id, items) {
     return "<div style='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);'><div class='avatar' style='background:"+col+"20;color:"+col+"'>"+init+"</div><div style='flex:1;min-width:0;'><div style='font-weight:500;font-size:12px;'>"+s+"</div><div style='font-size:10px;color:var(--text2);'>"+v.centro+"</div></div><div class='bar-track' style='width:100px;flex-shrink:0;'><div class='bar-fill' style='width:"+Math.round(v.n/maxN*100)+"%;background:"+col+"'></div></div><span class='badge' style='background:"+col+"20;color:"+col+";'>"+v.n+" obras</span><span style='font-size:10px;color:var(--text3);font-family:var(--mono);min-width:55px;text-align:right;'>"+fmtShort(v.val)+"</span></div>";
   }).join("")||"<div class='empty' style='padding:1rem'>—</div>";
 }
+
 
 function buildAdmSelect(val, idx) {
   var adms = ['Nayane - Juazeiro do Norte','Cicera Rodrigues - Juazeiro do Norte','Joselianny Chaves - Milagres','Ana Cleomar - Milagres','Delgaria Silva - Campos Sales','Mireli Maria - Campos Sales','Amanda Vasques - Juazeiro do Norte'];
@@ -629,5 +651,651 @@ function renderAcompanhamento() {
     const stateTag=isPend?"<span class='row-state rs-pend'>pendente</span>":isSalvo?"<span class='row-state rs-ok'>salvo ✓</span>":"";
     const etapaShort=o.etapa.replace("00 - ","").replace("10 - ","").replace("04 - ","").split(".")[0];
     if (isEdit) {
-      return "<tr class='"+rowCls+"'><td class='mono'>"+o.gpm+"</td><td class='mono' style='color:var(--blue)'>"+o.ot+"</td><td style='max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"+o.obra+"</td><td style='font-size:11px'>"+o.municipio+"</td><td><span class='badge badge-neutral'>"+o.centro.replace("C.S - ","")+"</span></td><td style='font-size:11px'>"+o.supervisor+"</td><td style='font-size:11px;color:var(--text2)'>"+etapaShort+"</td><td><span class='badge badge-neutral'>"+o.porte+"</span></td><td style='font-size:11px'>"+o.motivoPendencia+"</td><td style='max-width:130px
+      return "<tr class='"+rowCls+"'><td class='mono'>"+o.gpm+"</td><td class='mono' style='color:var(--blue)'>"+o.ot+"</td><td style='max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"+o.obra+"</td><td style='font-size:11px'>"+o.municipio+"</td><td><span class='badge badge-neutral'>"+o.centro.replace("C.S - ","")+"</span></td><td style='font-size:11px'>"+o.supervisor+"</td><td style='font-size:11px;color:var(--text2)'>"+etapaShort+"</td><td><span class='badge badge-neutral'>"+o.porte+"</span></td><td style='font-size:11px'>"+o.motivoPendencia+"</td><td style='max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;color:var(--text2);' title='"+o.detalhamento+"'>"+o.detalhamento+"</td><td><span class='badge "+dc+"'>"+o.diasAtraso+"d</span></td><td class='mono'>"+fmtShort(o.valor)+"</td><td><span class='badge "+(o.reprogramacao==="Sim"?"badge-warn":"badge-ok")+"'>"+o.reprogramacao+"</span></td>"
+        +"<td><select class='tbl-input' style='width:110px' onchange='updObra("+idx+",\"status\",this.value)'><option "+(o.status==="Pendente"?"selected":"")+"'>Pendente</option><option "+(o.status==="Em resolução"?"selected":"")+"'>Em resolução</option><option "+(o.status==="Resolvido"?"selected":"")+"'>Resolvido</option><option "+(o.status==="Crítico"?"selected":"")+"'>Crítico</option></select></td>"
+        +buildAdmSelect(o.responsavel, idx)
+        +"<td><input class='tbl-input' type='date' style='width:120px' value='"+(o.dataResolucao||"")+"' onchange='updObra("+idx+",\"dataResolucao\",this.value)'></td>"
+        +"<td><input class='tbl-input' style='width:140px' placeholder='Observação...' value='"+(o.obs||"")+"' oninput='updObra("+idx+",\"obs\",this.value)'></td>"
+        +"<td style='white-space:nowrap;'>"+stateTag+"<button class='edit-btn' onclick='toggleEdit("+idx+")' title='Fechar'>✕</button></td></tr>";
+    } else {
+      return "<tr class='"+rowCls+"'><td class='mono'>"+o.gpm+"</td><td class='mono' style='color:var(--blue)'>"+o.ot+"</td><td style='max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"+o.obra+"</td><td style='font-size:11px'>"+o.municipio+"</td><td><span class='badge badge-neutral'>"+o.centro.replace("C.S - ","")+"</span></td><td style='font-size:11px'>"+o.supervisor+"</td><td style='font-size:11px;color:var(--text2)'>"+etapaShort+"</td><td><span class='badge badge-neutral'>"+o.porte+"</span></td><td style='font-size:11px'>"+o.motivoPendencia+"</td><td style='max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;color:var(--text2);' title='"+o.detalhamento+"'>"+o.detalhamento+"</td><td><span class='badge "+dc+"'>"+o.diasAtraso+"d</span></td><td class='mono'>"+fmtShort(o.valor)+"</td><td><span class='badge "+(o.reprogramacao==="Sim"?"badge-warn":"badge-ok")+"'>"+o.reprogramacao+"</span></td>"
+        +"<td><span class='badge "+sc+"'>"+o.status+"</span></td>"
+        +"<td style='color:"+(o.responsavel?"var(--text)":"var(--text3)")+"'>"+( o.responsavel||"—")+"</td>"
+        +"<td class='mono' style='font-size:11px;color:"+(o.dataResolucao?"var(--text)":"var(--text3)")+"'>"+(o.dataResolucao?formatDateStr(o.dataResolucao):"—")+"</td>"
+        +"<td style='font-size:11px;color:"+(o.obs?"var(--text)":"var(--text3)")+"'>"+( o.obs||"—")+"</td>"
+        +"<td style='white-space:nowrap;'>"+stateTag+"<button class='wa-btn' onclick='openWaModal("+idx+")' title='Enviar WhatsApp'>💬</button><button class='edit-btn' onclick='toggleEdit("+idx+")' title='Editar'>✏️</button></td></tr>";
+    }
+  }).join("");
+  updatePendingBadge();
+}
 
+function toggleEdit(idx) {
+  if (editingSet.has(idx)) editingSet.delete(idx); else editingSet.add(idx);
+  renderAcompanhamento();
+}
+
+function updObra(idx, field, value) {
+  state.obras[idx][field]=value;
+  if (field==="dataResolucao"&&value&&state.obras[idx].status==="Pendente") state.obras[idx].status="Em resolução";
+  pendentesSet.add(idx); salvosSet.delete(idx);
+  updatePendingBadge();
+}
+
+function updatePendingBadge() {
+  const n=pendentesSet.size;
+  const badge=document.getElementById("pending-badge"), txt=document.getElementById("pending-txt"), btn=document.getElementById("btn-salvar");
+  if (n>0) { badge.style.display="inline-flex"; txt.textContent=n+(n===1?" alteração pendente":" alterações pendentes"); btn.innerHTML="&#128190; Salvar "+n+(n===1?" alteração":" alterações"); }
+  else { badge.style.display="none"; btn.innerHTML="&#128190; Salvar e sincronizar"; }
+}
+
+async function salvarTratativas() {
+  if (!configured) { showToast("⚙️ Configure a URL primeiro"); return; }
+  if (!pendentesSet.size) { showToast("Nenhuma alteração pendente"); return; }
+  const btn=document.getElementById("btn-salvar");
+  btn.disabled=true; btn.innerHTML="<span class='spinner'></span> Salvando...";
+  try {
+    const result=await apiPost("saveTratativas", state.obras.map(o=>({id:o.id,status:o.status,responsavel:o.responsavel,dataResolucao:o.dataResolucao,obs:o.obs})));
+    if (result&&result.ok) { pendentesSet.forEach(i=>salvosSet.add(i)); pendentesSet.clear(); editingSet.clear(); showToast("✅ Salvo e sincronizado!"); await apiPost("saveSnapshot", buildSnapshotObras()); await sincronizar(true); }
+    else throw new Error(result?.error||"erro");
+  } catch(e) { showToast("❌ Erro: "+e.message); }
+  btn.disabled=false; updatePendingBadge();
+}
+
+function renderHierarquia() {
+  const fc=document.getElementById("hier-filtro-centro")?.value||"";
+  const pendentes=state.obras.filter(o=>o.status!=="Resolvido"&&(!fc||o.centro===fc));
+  document.getElementById("hier-count").textContent=fc?pendentes.length+" obras pendentes em "+fc:"";
+  renderBarChart2("hier-centro", pendentes, "centro");
+  renderBarChart2("hier-etapa", pendentes, "etapa");
+  renderBarChart2("hier-motivo", pendentes, "motivoPendencia");
+  renderBarChart2("hier-porte", pendentes, "porte");
+  renderSupervisores("hier-supervisor", pendentes);
+}
+
+function renderBarChart2(id, items, field) {
+  const counts={};
+  items.forEach(o=>{ const v=o[field]||"—"; counts[v]=(counts[v]||0)+1; });
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max=sorted[0]?.[1]||1;
+  document.getElementById(id).innerHTML=sorted.map(([k,n])=>"<div class='bar-row'><div class='bar-label' title='"+k+"'>"+k+"</div><div class='bar-track'><div class='bar-fill' style='width:"+Math.round(n/max*100)+"%'></div></div><div class='bar-count'>"+n+"</div></div>").join("")||"<div class='empty' style='padding:1rem'>—</div>";
+}
+
+function renderHistorico() {
+  const cargas=state.cargas;
+  document.getElementById("historico-list").innerHTML=cargas.length?[...cargas].reverse().map(c=>"<div class='hist-row'><span class='hist-date'>"+formatCargaDate(c.data)+"</span>"+(parseInt(c.novas)>0?"<span class='badge badge-new'>+"+c.novas+" novas</span>":"")+(parseInt(c.removidas)>0?"<span class='badge badge-ok'>&#10003;"+c.removidas+" resolvidas</span>":"")+"<span style='font-size:12px;color:var(--text2);'>&#8594; "+c.pendentes+" pendentes</span><span style='font-family:var(--mono);font-size:11px;color:var(--text3);'>"+fmtValor(parseFloat(c.valorPendente)||0)+"</span></div>").join(""):"<div class='empty'><div class='empty-icon'>&#128197;</div>Nenhuma carga ainda</div>";
+  const pers=state.obras.filter(o=>o.status!=="Resolvido"&&cargas.length>1);
+  document.getElementById("persistentes-list").innerHTML=pers.length?"<div class='table-wrap'><table><thead><tr><th>GPM</th><th>OT</th><th>Supervisor</th><th>1ª vez</th><th>Dias</th></tr></thead><tbody>"+pers.sort((a,b)=>b.diasAtraso-a.diasAtraso).slice(0,12).map(o=>"<tr><td class='mono'>"+o.gpm+"</td><td class='mono'>"+o.ot+"</td><td style='font-size:11px'>"+o.supervisor+"</td><td style='font-size:11px;color:var(--text3)'>"+o.firstSeen+"</td><td><span class='badge "+(o.diasAtraso>=90?"badge-danger":"badge-warn")+"'>"+o.diasAtraso+"d</span></td></tr>").join("")+"</tbody></table></div>":"<div class='empty'><div class='empty-icon'>✅</div>Nenhuma obra persistente</div>";
+  document.getElementById("log-list").innerHTML=state.log.length?state.log.map(l=>"<div style='display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;'><span style='color:var(--text3);min-width:80px;font-family:var(--mono);'>"+l.data+"</span><span>"+l.msg+"</span></div>").join(""):"<div class='empty'>Nenhuma atividade</div>";
+}
+
+async function limparHistorico() {
+  if (!confirm("Limpar todo o histórico de cargas e log? As obras e tratativas não serão afetadas.")) return;
+  if (!configured) { showToast("⚙️ Configure a URL primeiro"); return; }
+  try {
+    const result=await apiPost("limparHistorico",{});
+    if (result&&result.ok) { state.cargas=[]; state.log=[]; renderHistorico(); showToast("✅ Histórico limpo!"); }
+    else throw new Error(result?.error||"erro");
+  } catch(e) { showToast("❌ Erro: "+e.message); }
+}
+
+function handleDrop(e) { e.preventDefault(); document.getElementById("upload-zone").classList.remove("drag"); processFile(e.dataTransfer.files[0]); }
+function handleFile(e) { processFile(e.target.files[0]); }
+
+function processFile(file) {
+  if (!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(e.target.result,{type:"array"});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+    let hi=-1;
+    for (let i=0;i<rows.length;i++) if (rows[i]&&rows[i].some(c=>String(c).toLowerCase().includes("cód")||String(c).toLowerCase().includes("cod")||String(c).toLowerCase().includes("gpm"))) { hi=i; break; }
+    if (hi===-1) { showToast("❌ Formato não reconhecido"); return; }
+    const hdr=rows[hi].map(h=>String(h||"").trim().toLowerCase());
+    const ci={
+      gpm: hdr.findIndex(h=>h.includes("gpm")||h.includes("cód")||h.includes("cod")),
+      dept: hdr.findIndex(h=>h.includes("departamento")),
+      centro: hdr.findIndex(h=>h.includes("centro")),
+      etapa: hdr.findIndex(h=>h.includes("etapa")),
+      porte: hdr.findIndex(h=>h.includes("porte")),
+      chefe: hdr.findIndex(h=>h.includes("chefe")),
+      ot: hdr.findIndex(h=>h.includes("ot")&&!h.includes("retorno")),
+      obra: hdr.findIndex(h=>h.includes("obra")),
+      municipio: hdr.findIndex(h=>h.includes("munic")),
+      supervisor: hdr.findIndex(h=>h.includes("supervisor")),
+      dataEnerg: hdr.findIndex(h=>h.includes("energiz")),
+      motivoPend: hdr.findIndex(h=>h.includes("motivo")),
+      detalh: hdr.findIndex(h=>h.includes("detalh")),
+      solicit: hdr.findIndex(h=>h.includes("solicit")),
+      retorno: hdr.findIndex(h=>h.includes("retorno")),
+      dias: hdr.findIndex(h=>h.includes("dias")),
+      valor: hdr.findIndex(h=>h.includes("valor")),
+      reprog: hdr.findIndex(h=>h.includes("reprog")&&!h.includes("data")&&!h.includes("detalh")&&!h.includes("data")),
+    };
+    const newObras=[];
+    for (let i=hi+1;i<rows.length;i++) {
+      const r=rows[i]; if (!r||!r.length) continue;
+      const gpm=String(r[ci.gpm]||"").trim();
+      if (!gpm||gpm.toLowerCase()==="total"||gpm.toLowerCase().includes("filtro")) continue;
+      if (isNaN(parseInt(gpm))) continue;
+      const ot=String(r[ci.ot]||"").trim();
+      const id=gpm+"|"+ot;
+      const dias=parseInt(r[ci.dias])||0;
+      newObras.push({
+        id, gpm, ot,
+        obra: String(r[ci.obra]||"").trim(),
+        municipio: String(r[ci.municipio]||"").trim(),
+        centro: String(r[ci.centro]||"").trim(),
+        etapa: String(r[ci.etapa]||"").trim(),
+        porte: String(r[ci.porte]||"").trim(),
+        chefeTurma: String(r[ci.chefe]||"").trim(),
+        supervisor: String(r[ci.supervisor]||"").trim(),
+        dataEnergizacao: String(r[ci.dataEnerg]||"").trim(),
+        motivoPendencia: String(r[ci.motivoPend]||"").trim(),
+        detalhamento: String(r[ci.detalh]||"").trim(),
+        diasAtraso: dias,
+        valor: parseFloat(r[ci.valor])||0,
+        reprogramacao: String(r[ci.reprog]||"").trim(),
+        status: dias>=90?"Crítico":"Pendente",
+      });
+    }
+    if (!newObras.length) { showToast("❌ Nenhuma obra encontrada"); return; }
+    const existIds=new Set(state.obras.map(o=>o.id));
+    const newIds=new Set(newObras.map(o=>o.id));
+    const novas=newObras.filter(o=>!existIds.has(o.id));
+    const removidas=state.obras.filter(o=>!newIds.has(o.id));
+    const mantidas=newObras.filter(o=>existIds.has(o.id));
+    pendingImport={newObras,novas,removidas,mantidas};
+    document.getElementById("preview-area").style.display="block";
+    document.getElementById("diff-area").innerHTML="<div style='font-size:13px;font-weight:500;margin-bottom:10px;'>"+newObras.length+" obras encontradas</div><div style='display:flex;flex-direction:column;gap:8px;font-size:13px;'>"+(novas.length?"<div>✦ <span class='badge badge-new'>+"+novas.length+" novas</span> entrarão como pendentes</div>":"")+(mantidas.length?"<div>≡ <span class='badge badge-neutral'>"+mantidas.length+" mantidas</span> — tratativas preservadas</div>":"")+(removidas.length?"<div>✓ <span class='badge badge-ok'>"+removidas.length+" saíram</span> — não aparecem mais</div>":"")+"</div>";
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function confirmarImportacao() {
+  if (!pendingImport) return;
+  if (!configured) { showToast("⚙️ Configure a URL primeiro"); return; }
+  const btn=document.getElementById("btn-confirmar");
+  btn.disabled=true; btn.innerHTML="<span class='spinner'></span> Enviando...";
+  const today=new Date().toLocaleDateString("pt-BR");
+  try {
+    const result=await apiPost("importCarga",{obras:pendingImport.newObras,data:today});
+    if (result&&result.ok) { showToast("✅ "+result.total+" obras importadas"); pendingImport=null; document.getElementById("preview-area").style.display="none"; document.getElementById("file-input").value=""; await sincronizar(true); showTab("dashboard",document.querySelectorAll("nav button")[0]); }
+    else throw new Error(result?.error||"erro");
+  } catch(e) { showToast("❌ Erro: "+e.message); }
+  btn.disabled=false; btn.innerHTML="Confirmar e enviar para o Sheets";
+}
+
+function cancelarImport() { pendingImport=null; document.getElementById("preview-area").style.display="none"; document.getElementById("file-input").value=""; }
+
+function exportarCSV() {
+  if (!state.obras.length) { showToast("Nenhum dado"); return; }
+  const h=["GPM","OT","Obra","Município","Centro","Supervisor","Etapa","Porte","Motivo","Detalhamento","Dias","Valor","Reprogramação","Status","Responsável","Data Resolução","Observação"];
+  const rows=state.obras.map(o=>[o.gpm,o.ot,o.obra,o.municipio,o.centro,o.supervisor,o.etapa,o.porte,o.motivoPendencia,o.detalhamento,o.diasAtraso,o.valor,o.reprogramacao,o.status,o.responsavel,o.dataResolucao,o.obs]);
+  const csv=[h,...rows].map(r=>r.map(c=>"\""+String(c||"").replace(/"/g,"\"\"")+"\"\"").join(",")).join("\n");
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"})); a.download="pendencias_"+new Date().toISOString().split("T")[0]+".csv"; a.click();
+}
+
+function fmtValor(v) { return "R$ "+(parseFloat(v)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtShort(v) { const n=parseFloat(v)||0; return n>=1000?"R$ "+(n/1000).toFixed(1)+"k":"R$ "+Math.round(n); }
+function buildSnapshotObras() {
+  const obras = state.obras;
+  const pendentes  = obras.filter(o=>o.status!=="Resolvido").length;
+  const resolvidas = obras.filter(o=>o.status==="Resolvido").length;
+  const emTrat     = obras.filter(o=>o.status==="Em resolução").length;
+  const valorPend  = obras.filter(o=>o.status!=="Resolvido").reduce((s,o)=>s+o.valor,0);
+  return { data: new Date().toLocaleDateString("pt-BR"), pendentes, resolvidas, emTrat, reinc: 0, valorPend, total: obras.length };
+}
+
+
+function renderConsolidado() {
+  const snaps = state.snapshots || [];
+  const cargas = state.cargas || [];
+  const items = state.obras;
+  if (!items.length && !snaps.length && !cargas.length) return;
+
+  const pendentes  = items.filter(o=>o.status!=='Resolvido').length;
+  const resolvidas = items.filter(o=>o.status==='Resolvido').length;
+  const emTrat     = items.filter(o=>o.status==='Em resolução').length;
+  const lastCarga  = cargas[cargas.length-1];
+  const totalCarga = lastCarga ? (parseInt(lastCarga.total)||0) : pendentes+resolvidas;
+  const vPend      = items.filter(o=>o.status!=='Resolvido').reduce((s,o)=>s+(o.valor||0),0);
+  const vRes       = items.filter(o=>o.status==='Resolvido').reduce((s,o)=>s+(o.valor||0),0);
+  const vTotal     = vPend+vRes;
+  const vCarga     = lastCarga ? (parseFloat(lastCarga.valorPendente)||0) : vTotal;
+  const pct        = totalCarga>0?Math.round(resolvidas/totalCarga*100):0;
+
+  // Narrativa
+  document.getElementById('narr-total').textContent    = totalCarga;
+  document.getElementById('narr-total-val').textContent = fmtValor(vCarga);
+  document.getElementById('narr-total-sub').textContent = 'última carga · '+(lastCarga?formatCargaDate(lastCarga.data):'—');
+  document.getElementById('narr-tratado').textContent   = resolvidas;
+  document.getElementById('narr-tratado-val').textContent = fmtValor(vRes);
+  document.getElementById('narr-tratado-sub').textContent = 'resolvidas · '+pct+'%';
+  document.getElementById('narr-saldo').textContent     = pendentes;
+  document.getElementById('narr-saldo-val').textContent = fmtValor(vPend);
+  document.getElementById('narr-saldo-sub').textContent = 'pendentes hoje · '+new Date().toLocaleDateString('pt-BR');
+
+  // Build points — cada carga é um ponto separado, não agrupa
+  const allPoints = [];
+
+  // Cada carga = 1 ponto com label "dd/mm (Nº)"
+  const cargasByDate = {};
+  cargas.forEach(c => {
+    const key = formatCargaDate(c.data);
+    cargasByDate[key] = (cargasByDate[key]||0) + 1;
+  });
+  const cargaCount = {};
+  // Acumula resolvidas por data (soma de removidas de todas as cargas daquele dia)
+  const resolvidasPorData = {};
+  cargas.forEach(c => {
+    const key = formatCargaDate(c.data);
+    resolvidasPorData[key] = (resolvidasPorData[key]||0) + (parseInt(c.removidas)||0);
+  });
+  cargas.forEach(c => {
+    const key = formatCargaDate(c.data);
+    cargaCount[key] = (cargaCount[key]||0) + 1;
+    const total = cargasByDate[key];
+    const label = total > 1 ? key + ' (' + cargaCount[key] + 'ª)' : key;
+    // Resolvidas = removidas desta carga + os marcados como Resolvido pelas adm
+    const resolvidasAdm = parseInt(c.resolvidasAdm)||0;
+    const resolvidasTotal = (parseInt(c.removidas)||0) + resolvidasAdm;
+    allPoints.push({
+      data: label,
+      pendentes: parseInt(c.pendentes)||0,
+      resolvidas: resolvidasTotal,
+      emTrat: parseInt(c.emTrat)||0,
+      novas: parseInt(c.novas)||0,
+      reinc: 0,
+      tipo: 'carga',
+      valorPend: parseFloat(c.valorPendente)||0,
+      valorRes: 0,
+      valorNovas: parseFloat(c.valorNovas)||0,
+      valorTrat: parseFloat(c.valorTrat)||0,
+      sortKey: formatCargaDate(c.data).split('/').reverse().join('') + String(cargaCount[key]).padStart(3,'0')
+    });
+  });
+
+  // Snapshots — só adiciona se não houver carga no mesmo dia
+  const cargaDates = new Set(Object.keys(cargasByDate));
+  snaps.forEach(s => {
+    const key = formatCargaDate(s.data);
+    if (cargaDates.has(key)) return; // já tem carga nesse dia
+    allPoints.push({
+      data: key,
+      pendentes: parseInt(s.pendentes)||0,
+      resolvidas: parseInt(s.resolvidas)||0,
+      emTrat: parseInt(s.emTrat)||0,
+      novas: 0,
+      reinc: parseInt(s.reinc)||0,
+      tipo: 'snapshot',
+      valorPend: parseFloat(s.valorPend)||0,
+      valorRes: 0,
+      valorTrat: parseFloat(s.valorTrat)||0,
+      sortKey: key.split('/').reverse().join('') + '500'
+    });
+  });
+
+  // Hoje — só adiciona se data for diferente de TODAS as cargas E houver mudança
+  const hojeKey = new Date().toLocaleDateString('pt-BR');
+  const hojeFormatted = formatCargaDate(hojeKey);
+  const lastCargaData = cargas.length ? formatCargaDate(cargas[cargas.length-1].data) : '';
+  const lastCargaPend = cargas.length ? (parseInt(cargas[cargas.length-1].pendentes)||0) : 0;
+  const hojeResolvidas = resolvidas + (cargas.length ? (parseInt(cargas[cargas.length-1].removidas)||0) : 0);
+  // Só mostra "hoje" se for um dia diferente das cargas E tiver mudança
+  const hojeEhNovoDia = !cargaDates.has(hojeFormatted);
+  if (hojeEhNovoDia && (pendentes !== lastCargaPend || resolvidas > 0)) {
+    const vTrat = items.filter(o=>o.status==='Em resolução'||o.status==='Resolvido').reduce((s,o)=>s+(o.valor||0),0);
+    const nTrat = items.filter(o=>o.status==='Em resolução'||o.status==='Resolvido').length;
+    allPoints.push({
+      data: hojeFormatted,
+      pendentes, resolvidas: hojeResolvidas, emTrat: nTrat,
+      novas: 0,
+      reinc: items.filter(o=>(o.reincidencias||0)>0&&o.status!=='Resolvido').length,
+      tipo: 'hoje',
+      valorPend: vPend, valorRes: vRes, valorTrat: vTrat,
+      sortKey: hojeFormatted.split('/').reverse().join('') + '999'
+    });
+  }
+
+  const points = allPoints.sort((a,b) => (a.sortKey||'').localeCompare(b.sortKey||''));
+  const maxP = Math.max(...points.map(p=>p.pendentes), 1);
+
+  // Lista diária
+  document.getElementById('cons-lista').innerHTML = points.length ? [...points].reverse().slice(0,14).map(p=>{
+    const isHoje = p.tipo==='hoje', isCarga = p.tipo==='carga';
+    const dataFmt = formatCargaDate(p.data);
+    const pct2 = Math.round(p.pendentes/maxP*100);
+    const rPct2 = Math.round(p.resolvidas/maxP*100);
+    return '<div class="cons-row"'+(isHoje?' style="background:var(--surface2);border-radius:6px;padding:10px;"':'')+'>'+
+      '<div class="cons-date">'+dataFmt+(isHoje?'<br><span style="font-size:9px;color:var(--green)">hoje</span>':'')+'</div>'+
+      '<div class="cons-bars">'+
+        '<div class="cons-bar-line"><span class="cons-bar-label">Pendentes</span><div class="cons-bar-bg"><div class="cons-bar-fill" style="width:'+pct2+'%;background:var(--text)"></div></div><span class="cons-bar-val">'+p.pendentes+'</span></div>'+
+        (p.resolvidas>0?'<div class="cons-bar-line"><span class="cons-bar-label">Resolvidas</span><div class="cons-bar-bg"><div class="cons-bar-fill" style="width:'+rPct2+'%;background:var(--green)"></div></div><span class="cons-bar-val" style="color:var(--green)">'+p.resolvidas+'</span></div>':'')+
+      '</div>'+
+      '<div class="cons-badges">'+
+        (isCarga?'<span class="badge badge-neutral" style="font-size:10px;">&#128204; carga</span>':'')+
+        (p.novas>0?'<span class="badge badge-new">+'+p.novas+' novas</span>':'')+
+        (p.reinc>0?'<span class="badge badge-reinc">&#128260; '+p.reinc+' reinc.</span>':'')+
+        (p.emTrat>0?'<span class="badge badge-trat">'+p.emTrat+' em trat.</span>':'')+
+        (p.resolvidas>0?'<span class="badge badge-ok">&#8595; '+p.resolvidas+' resol.</span>':'')+
+        (p.valorPend>0?'<span style="font-size:10px;font-family:var(--mono);color:var(--text3);">'+fmtShort(p.valorPend)+'</span>':'')+
+      '</div>'+
+    '</div>';
+  }).join('') : '<div class="empty" style="padding:1rem">Nenhum dado ainda</div>';
+
+  // Legend
+  document.getElementById('cons-legend').innerHTML = [
+    {color:'#1A1916',label:'Pendentes'},{color:'#2D6A4F',label:'Saíram/Resolvidas'},
+    {color:'#378ADD',label:'Novas entradas'},{color:'#C2410C',label:'Reincidentes'},
+    {color:'#5B21B6',label:'Tratadas pelas Adms'}
+  ].map(l=>'<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);"><div style="width:10px;height:10px;border-radius:2px;background:'+l.color+'"></div>'+l.label+'</div>').join('');
+
+  const labels  = points.map(p=>formatCargaDate(p.data).split('/').slice(0,2).join('/'));
+  const datPend = points.map(p=>p.pendentes);
+  const datRes  = points.map(p=>p.resolvidas);
+  const datNovas= points.map(p=>p.novas);
+  const datReinc= points.map(p=>p.reinc);
+  const datVPend= points.map(p=>Math.round(p.valorPend));
+  const datVRes = points.map(p=>Math.round(p.valorRes||0));
+
+  // Qtd chart
+  const datVNovas = points.map(p => Math.round(p.valorNovas||0));
+  const datTrat  = points.map(p => parseInt(p.emTrat)||0);
+  const datVTrat = points.map(p => Math.round(p.valorTrat||0));
+  const datVResFinal = points.map(p => Math.round(p.valorRes||0));
+  Chart.register(ChartDataLabels);
+  if (consChart) { consChart.destroy(); consChart = null; }
+  const ctx = document.getElementById('cons-chart');
+  if (ctx) consChart = new Chart(ctx, {
+    type:'bar',
+    data:{labels, datasets:[
+      {label:'Pendentes', data:datPend, backgroundColor:'#1A1916', borderRadius:3, borderSkipped:false},
+      {label:'Resolvidas', data:datRes, backgroundColor:'#2D6A4F', borderRadius:3, borderSkipped:false},
+      {label:'Novas entradas', data:datNovas, backgroundColor:'#378ADD', borderRadius:3, borderSkipped:false},
+      {label:'Reincidentes', data:datReinc, backgroundColor:'#C2410C', borderRadius:3, borderSkipped:false},
+      {label:'Tratadas pelas Adms', data:datTrat, backgroundColor:'#5B21B6', borderRadius:3, borderSkipped:false},
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{
+          afterBody: items => {
+            const i = items[0].dataIndex;
+            return ['Pendentes: '+datPend[i], 'Resolvidas: '+datRes[i], 'Novas: '+datNovas[i], 'Reinc: '+datReinc[i]];
+          }
+        }},
+        datalabels:{
+          anchor:'center', align:'center',
+          font:{size:12, weight:'700'},
+          color:'#1A1916',
+          backgroundColor:'rgba(255,255,255,0.92)',
+          borderRadius:4,
+          padding:{top:3,bottom:3,left:6,right:6},
+          formatter: v => v > 0 ? v : ''
+        }
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:11},color:'#888780',autoSkip:false,maxRotation:45},
+          stacked:false},
+        y:{grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#888780'}, stacked:false}
+      }
+    }
+  });
+
+  // Valor chart
+  // compute valorRes from snapshots properly
+
+  if (consChartVal) { consChartVal.destroy(); consChartVal = null; }
+  const ctxVal = document.getElementById('cons-chart-val');
+  if (ctxVal) consChartVal = new Chart(ctxVal, {
+    type:'bar',
+    data:{labels, datasets:[
+      {label:'Valor pendente', data:datVPend, backgroundColor:'#1A1916', borderRadius:3, borderSkipped:false},
+      {label:'Valor resolvido', data:datVResFinal, backgroundColor:'#2D6A4F', borderRadius:3, borderSkipped:false},
+      {label:'Valor novas entradas', data:datVNovas, backgroundColor:'#378ADD', borderRadius:3, borderSkipped:false},
+      {label:'Valor tratado Adms', data:datVTrat, backgroundColor:'#5B21B6', borderRadius:3, borderSkipped:false},
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>'R$ '+c.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2})}},
+        datalabels:{
+          anchor:'center', align:'center',
+          font:{size:12, weight:'700'},
+          color:'#1A1916',
+          backgroundColor:'rgba(255,255,255,0.92)',
+          borderRadius:4,
+          padding:{top:3,bottom:3,left:6,right:6},
+          formatter: v => v > 0 ? (v>=1000 ? 'R$ '+(v/1000).toFixed(1)+'k' : 'R$ '+v) : ''
+        }
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:11},color:'#888780',autoSkip:false,maxRotation:45}},
+        y:{grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#888780',callback:v=>v>=1000?'R$'+(v/1000).toFixed(0)+'k':'R$'+v}}
+      }
+    }
+  });
+}
+
+function switchConsChart(tipo) {
+  const btnQtd = document.getElementById('cons-tab-qtd');
+  const btnVal = document.getElementById('cons-tab-val');
+  const wrapQtd = document.getElementById('cons-wrap-qtd');
+  const wrapVal = document.getElementById('cons-wrap-val');
+  if (tipo==='qtd') {
+    btnQtd.style.background='var(--text)'; btnQtd.style.color='#fff'; btnQtd.style.borderColor='var(--text)';
+    btnVal.style.background=''; btnVal.style.color=''; btnVal.style.borderColor='';
+    wrapQtd.style.display='block'; wrapVal.style.display='none';
+  } else {
+    btnVal.style.background='var(--text)'; btnVal.style.color='#fff'; btnVal.style.borderColor='var(--text)';
+    btnQtd.style.background=''; btnQtd.style.color=''; btnQtd.style.borderColor='';
+    wrapQtd.style.display='none'; wrapVal.style.display='block';
+    if (consChartVal) consChartVal.update();
+  }
+}
+
+
+
+function exportarConsolidadoCSV() {
+  const cargas = state.cargas || [];
+  const snaps = state.snapshots || [];
+  const obras = state.obras || [];
+  const allPoints = [];
+  cargas.forEach(c => allPoints.push({
+    data: formatCargaDate(c.data), tipo: 'Carga importada',
+    pendentes: parseInt(c.pendentes)||0, resolvidas: parseInt(c.removidas)||0,
+    novas: parseInt(c.novas)||0, valorPend: parseFloat(c.valorPendente)||0
+  }));
+  snaps.forEach(s => allPoints.push({
+    data: formatCargaDate(s.data), tipo: 'Snapshot diário',
+    pendentes: parseInt(s.pendentes)||0, resolvidas: parseInt(s.resolvidas)||0,
+    novas: 0, valorPend: parseFloat(s.valorPend)||0
+  }));
+  allPoints.push({
+    data: new Date().toLocaleDateString('pt-BR'), tipo: 'Hoje',
+    pendentes: obras.filter(o=>o.status!=='Resolvido').length,
+    resolvidas: obras.filter(o=>o.status==='Resolvido').length,
+    novas: 0, valorPend: obras.filter(o=>o.status!=='Resolvido').reduce((s,o)=>s+(o.valor||0),0)
+  });
+  if (!allPoints.length) { showToast('Nenhum dado para exportar'); return; }
+  const h = ['Data','Tipo','Pendentes','Resolvidas','Novas','Valor Pendente'];
+  const rows = allPoints.map(p=>[p.data,p.tipo,p.pendentes,p.resolvidas,p.novas,p.valorPend.toFixed(2)]);
+  const csv = [h,...rows].map(r=>r.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = 'consolidado_obras_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+  showToast('✅ CSV exportado!');
+}
+
+
+let waCurrentIdx = null;
+
+function openWaModal(idx) {
+  const items = state.obras;
+  const o = items[idx];
+  waCurrentIdx = idx;
+  document.getElementById('wa-modal-sub').textContent = 'OS ' + o.gpm + ' — ' + o.obra;
+  document.getElementById('wa-phone').value = '';
+  document.getElementById('wa-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('wa-phone').focus(), 100);
+}
+
+function closeWaModal() {
+  document.getElementById('wa-modal').style.display = 'none';
+  waCurrentIdx = null;
+}
+
+function sendWhatsApp() {
+  const phone = document.getElementById('wa-phone').value.replace(/\D/g,'');
+  if (!phone || phone.length < 10) { showToast('⚠️ Informe um número válido com DDD'); return; }
+  const items = state.obras;
+  const o = items[waCurrentIdx];
+  const msg = buildWaMsg(o);
+  const url = 'https://wa.me/55' + phone + '?text=' + encodeURIComponent(msg);
+  window.open(url, '_blank');
+  closeWaModal();
+}
+
+function buildWaMsg(o) {
+  const nl = '\n';
+
+  const critico = o.diasAtraso >= 90;
+  const statusLine = critico
+    ? '⚠️ *Status:* CRÍTICO'
+    : '✅ *Status:* ' + (o.status || 'Pendente');
+
+  // Situação atual: prioriza Observação; se vazio, usa Detalhamento
+  const baseSituacao = (o.obs && o.obs.trim())
+    ? o.obs.trim()
+    : (o.detalhamento && o.detalhamento.trim())
+      ? o.detalhamento.trim()
+      : 'Sem informações adicionais.';
+
+  const reprogPrefix = (o.reprogramacao && o.reprogramacao.toLowerCase() !== 'não')
+    ? 'Reprogramação — '
+    : '';
+
+  const situacaoFinal = reprogPrefix + baseSituacao;
+
+  return (
+    '📌 *Pendência Técnica — Ação Necessária*' + nl + nl +
+    'Olá!' + nl + nl +
+    'Identificamos uma obra com pendência técnica vinculada à sua equipe, conforme informações abaixo:' + nl + nl +
+
+    '📍 *GPM:* ' + o.gpm + nl +
+    '📍 *OT:* ' + o.ot + nl +
+    '📍 *Obra:* ' + o.obra + nl +
+    '📍 *Município:* ' + o.municipio + nl +
+    '📍 *Supervisor:* ' + o.supervisor + nl + nl +
+
+    statusLine + nl +
+    '⏳ *Dias aguardando:* ' + o.diasAtraso + ' dias' + nl +
+    '📄 *Motivo:* ' + o.motivoPendencia + nl + nl +
+
+    '🔧 *Situação Atual:*' + nl +
+    situacaoFinal + nl + nl +
+
+    '💰 *Valor da obra:* ' + fmtValor(o.valor) + nl + nl +
+    'Por gentileza, solicitamos uma previsão para regularização desta pendência, bem como o posicionamento sobre a disponibilidade do material necessário para conclusão da obra.'
+  );
+}
+
+function openWaConsolidado() {
+  const msg = buildWaConsolidado();
+  document.getElementById('wa-cons-preview').textContent = msg;
+  document.getElementById('wa-cons-phone').value = '';
+  document.getElementById('wa-cons-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('wa-cons-phone').focus(), 100);
+}
+
+function closeWaConsModal() {
+  document.getElementById('wa-cons-modal').style.display = 'none';
+}
+
+function sendWaConsolidado() {
+  const phone = document.getElementById('wa-cons-phone').value.replace(/\D/g,'');
+  if (!phone || phone.length < 10) { showToast('⚠️ Informe um número válido com DDD'); return; }
+  const msg = buildWaConsolidado();
+  const url = 'https://wa.me/55' + phone + '?text=' + encodeURIComponent(msg);
+  window.open(url, '_blank');
+  closeWaConsModal();
+}
+
+function buildWaConsolidado() {
+  const cargas = state.cargas || [];
+  const snaps  = state.snapshots || [];
+  const obras  = state.obras;
+  let lines = ['*📊 Atualização Diária — Pendências Técnicas*', ''];
+
+  const cargasByDate = {};
+  cargas.forEach(c => { const key = formatCargaDate(c.data); cargasByDate[key] = (cargasByDate[key]||0) + 1; });
+
+  const allPoints = [];
+  cargas.forEach(c => {
+    const key = formatCargaDate(c.data);
+    allPoints.push({
+      data: key, pendentes: parseInt(c.pendentes)||0,
+      resolvidas: parseInt(c.removidas)||0,
+      novas: parseInt(c.novas)||0, tratadas: 0,
+      valorPend: parseFloat(c.valorPendente)||0, valorTrat: 0, tipo: 'carga'
+    });
+  });
+
+  snaps.forEach(s => {
+    const key = formatCargaDate(s.data);
+    if (cargasByDate[key]) return;
+    allPoints.push({
+      data: key, pendentes: parseInt(s.pendentes)||0,
+      resolvidas: parseInt(s.resolvidas)||0,
+      novas: 0, tratadas: parseInt(s.emTrat)||0,
+      valorPend: parseFloat(s.valorPend)||0,
+      valorTrat: parseFloat(s.valorTrat)||0, tipo: 'snapshot'
+    });
+  });
+
+  const hojeFormatted = formatCargaDate(new Date().toLocaleDateString('pt-BR'));
+  if (!cargasByDate[hojeFormatted]) {
+    const pendentes = obras.filter(o=>o.status!=='Resolvido').length;
+    const resolvidas = obras.filter(o=>o.status==='Resolvido').length;
+    const emTrat = obras.filter(o=>o.status==='Resolvido'||o.status==='Em resolução').length;
+    const vPend = obras.filter(o=>o.status!=='Resolvido').reduce((s,o)=>s+(o.valor||0),0);
+    const vTrat = obras.filter(o=>o.status==='Resolvido'||o.status==='Em resolução').reduce((s,o)=>s+(o.valor||0),0);
+    allPoints.push({
+      data: hojeFormatted, pendentes, resolvidas, novas: 0,
+      tratadas: emTrat, valorPend: vPend, valorTrat: vTrat, tipo: 'hoje'
+    });
+  }
+
+  const sorted = allPoints.sort((a,b) => a.data.split('/').reverse().join('').localeCompare(b.data.split('/').reverse().join('')));
+
+  sorted.forEach(p => {
+    let line = '*' + p.data + '* — ' + p.pendentes + ' pendentes';
+    if (p.resolvidas > 0) line += ' — ' + p.resolvidas + ' resolvidas';
+    if (p.novas > 0) line += ' — ' + p.novas + ' novas';
+    if (p.tratadas > 0) line += ' — ' + p.tratadas + ' tratadas pelas Adms';
+    if (p.tipo === 'hoje' || p.tipo === 'snapshot') {
+      line += ' — R$ ' + p.valorPend.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' *(previsto)*';
+      if (p.valorTrat > 0) line += ' — R$ ' + p.valorTrat.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' já marcado pelas Adms';
+    } else {
+      line += ' — R$ ' + p.valorPend.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+    lines.push(line);
+  });
+
+  lines.push('');
+  lines.push('_Atualização gerada em ' + new Date().toLocaleString('pt-BR') + '_');
+  return lines.join('\n');
+}
+
+function showToast(msg) { const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3500); }
+
+// Chart.js loaded via head scripts
+window.addEventListener("beforeunload",function(e){ if(pendentesSet&&pendentesSet.size>0){e.preventDefault();e.returnValue="Você tem alterações não salvas.";return e.returnValue;} });
+
+if (configured) { document.getElementById("cfg-banner").style.display="none"; sincronizar(); setInterval(sincronizar,30000); }
+else setSyncStatus("error");
+</script>
+</body>
+</html>
