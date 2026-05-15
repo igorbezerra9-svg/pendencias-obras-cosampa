@@ -119,8 +119,7 @@
   .wa-input:focus { outline: none; border-color: #25D366; }
   .wa-actions { display: flex; gap: 8px; justify-content: flex-end; }
   .wa-send { background: #25D366; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
-  .wa-send:hover { background: #1da851; } line-height: 1; transition: background .15s; }
-  .edit-btn:hover { background: var(--surface2); color: var(--text); }
+  .wa-send:hover { background: #1da851; }
   .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; flex-shrink: 0; }
   #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--text); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; pointer-events: none; z-index: 999; }
   #toast.show { opacity: 1; transform: translateY(0); }
@@ -1149,57 +1148,50 @@ function closeWaModal() {
 
 function sendWhatsApp() {
   const phone = document.getElementById('wa-phone').value.replace(/\D/g,'');
-  if (!phone || phone.length < 10) { showToast('⚠️ Informe um número válido com DDD'); return; }
-  const items = state.obras;
-  const o = items[waCurrentIdx];
+  if (!phone || phone.length < 10) { showToast('Informe um numero valido com DDD'); return; }
+  const o = state.obras[waCurrentIdx];
   const msg = buildWaMsg(o);
-  const url = 'https://wa.me/55' + phone + '?text=' + encodeURIComponent(msg);
+  const msgEncoded = msg.split('\n').map(line => encodeURIComponent(line)).join('%0A');
+  const url = 'https://wa.me/55' + phone + '?text=' + msgEncoded;
   window.open(url, '_blank');
   closeWaModal();
 }
-
 function buildWaMsg(o) {
-  const nl = '\n';
-
   const critico = o.diasAtraso >= 90;
-  const statusLine = critico
-    ? '**Status:** CRÍTICO'
-    : '**Status:** ' + (o.status || 'Pendente');
-
-  // Situação atual: usa Observação se existir; senão, Detalhamento
-  const baseSituacao = (o.obs && o.obs.trim())
-    ? o.obs.trim()
-    : (o.detalhamento && o.detalhamento.trim())
-      ? o.detalhamento.trim()
-      : 'Sem informações adicionais.';
-
-  const reprogPrefix = (o.reprogramacao && o.reprogramacao.toLowerCase() !== 'não')
-    ? 'Reprogramação — '
-    : '';
-
+  const statusLine = critico ? '*Status:* CRITICO' : '*Status:* ' + (o.status || 'Pendente');
+  const baseSituacao = (o.obs && o.obs.trim()) ? o.obs.trim()
+    : (o.detalhamento && o.detalhamento.trim()) ? o.detalhamento.trim()
+    : 'Sem informacoes adicionais.';
+  const reprogPrefix = (o.reprogramacao && o.reprogramacao.toLowerCase() !== 'nao' && o.reprogramacao.trim() !== '')
+    ? 'Reprogramacao - ' : '';
   const situacaoFinal = reprogPrefix + baseSituacao;
 
-  return (
-    'PENDÊNCIA TÉCNICA — AÇÃO NECESSÁRIA' + nl + nl +
-    'Olá!' + nl + nl +
-    'Identificamos uma obra com pendência técnica vinculada à sua equipe, conforme informações abaixo:' + nl + nl +
+  const linhas = [
+    'PENDENCIA TECNICA - ACAO NECESSARIA',
+    '',
+    'Ola!',
+    '',
+    'Identificamos uma obra com pendencia tecnica vinculada a sua equipe:',
+    '',
+    '*GPM:* ' + o.gpm,
+    '*OT:* ' + o.ot,
+    '*Obra:* ' + o.obra,
+    '*Municipio:* ' + o.municipio,
+    '*Supervisor:* ' + o.supervisor,
+    '',
+    statusLine,
+    '*Dias aguardando:* ' + o.diasAtraso + ' dias',
+    '*Motivo:* ' + o.motivoPendencia,
+    '',
+    '*Situacao Atual:*',
+    situacaoFinal,
+    '',
+    '*Valor da obra:* ' + fmtValor(o.valor),
+    '',
+    'Por gentileza, solicitamos uma previsao para regularizacao desta pendencia.'
+  ];
 
-    '**GPM:** ' + o.gpm + nl +
-    '**OT:** ' + o.ot + nl +
-    '**Obra:** ' + o.obra + nl +
-    '**Município:** ' + o.municipio + nl +
-    '**Supervisor:** ' + o.supervisor + nl + nl +
-
-    statusLine + nl +
-    '**Dias aguardando:** ' + o.diasAtraso + ' dias' + nl +
-    '**Motivo:** ' + o.motivoPendencia + nl + nl +
-
-    '**Situação Atual:**' + nl +
-    situacaoFinal + nl + nl +
-
-    '**Valor da obra:** ' + fmtValor(o.valor) + nl + nl +
-    'Por gentileza, solicitamos uma previsão para regularização desta pendência, bem como o posicionamento sobre a disponibilidade do material necessário para conclusão da obra.'
-  );
+  return linhas.join('\n');
 }
 function openWaConsolidado() {
   const msg = buildWaConsolidado();
