@@ -1163,10 +1163,10 @@ function buildWaMsg(o) {
 
   const critico = o.diasAtraso >= 90;
   const statusLine = critico
-    ? '⚠️ *Status:* CRÍTICO'
-    : '✅ *Status:* ' + (o.status || 'Pendente');
+    ? '**Status:** CRÍTICO'
+    : '**Status:** ' + (o.status || 'Pendente');
 
-  // Situação atual: prioriza Observação; se vazio, usa Detalhamento
+  // Situação atual: usa Observação (se tiver), senão Detalhamento
   const baseSituacao = (o.obs && o.obs.trim())
     ? o.obs.trim()
     : (o.detalhamento && o.detalhamento.trim())
@@ -1180,28 +1180,27 @@ function buildWaMsg(o) {
   const situacaoFinal = reprogPrefix + baseSituacao;
 
   return (
-    '📌 *Pendência Técnica — Ação Necessária*' + nl + nl +
+    'PENDÊNCIA TÉCNICA — AÇÃO NECESSÁRIA' + nl + nl +
     'Olá!' + nl + nl +
     'Identificamos uma obra com pendência técnica vinculada à sua equipe, conforme informações abaixo:' + nl + nl +
 
-    '📍 *GPM:* ' + o.gpm + nl +
-    '📍 *OT:* ' + o.ot + nl +
-    '📍 *Obra:* ' + o.obra + nl +
-    '📍 *Município:* ' + o.municipio + nl +
-    '📍 *Supervisor:* ' + o.supervisor + nl + nl +
+    '**GPM:** ' + o.gpm + nl +
+    '**OT:** ' + o.ot + nl +
+    '**Obra:** ' + o.obra + nl +
+    '**Município:** ' + o.municipio + nl +
+    '**Supervisor:** ' + o.supervisor + nl + nl +
 
     statusLine + nl +
-    '⏳ *Dias aguardando:* ' + o.diasAtraso + ' dias' + nl +
-    '📄 *Motivo:* ' + o.motivoPendencia + nl + nl +
+    '**Dias aguardando:** ' + o.diasAtraso + ' dias' + nl +
+    '**Motivo:** ' + o.motivoPendencia + nl + nl +
 
-    '🔧 *Situação Atual:*' + nl +
+    '**Situação Atual:**' + nl +
     situacaoFinal + nl + nl +
 
-    '💰 *Valor da obra:* ' + fmtValor(o.valor) + nl + nl +
+    '**Valor da obra:** ' + fmtValor(o.valor) + nl + nl +
     'Por gentileza, solicitamos uma previsão para regularização desta pendência, bem como o posicionamento sobre a disponibilidade do material necessário para conclusão da obra.'
   );
 }
-
 function openWaConsolidado() {
   const msg = buildWaConsolidado();
   document.getElementById('wa-cons-preview').textContent = msg;
