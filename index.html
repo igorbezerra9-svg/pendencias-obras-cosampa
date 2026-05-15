@@ -1045,7 +1045,6 @@ function renderConsolidado() {
   const datTrat  = points.map(p => parseInt(p.emTrat)||0);
   const datVTrat = points.map(p => Math.round(p.valorTrat||0));
   const datVResFinal = points.map(p => Math.round(p.valorRes||0));
-  });
 
   if (consChartVal) { consChartVal.destroy(); consChartVal = null; }
   const ctxVal = document.getElementById('cons-chart-val');
