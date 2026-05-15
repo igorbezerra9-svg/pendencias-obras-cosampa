@@ -1147,53 +1147,41 @@ function closeWaModal() {
 }
 
 function sendWhatsApp() {
-  const phone = document.getElementById('wa-phone').value.replace(/\D/g,'');
+  var phone = document.getElementById('wa-phone').value.replace(/\D/g,'');
   if (!phone || phone.length < 10) { showToast('Informe um numero valido com DDD'); return; }
-  const o = state.obras[waCurrentIdx];
-  const msg = buildWaMsg(o);
-  const msgEncoded = msg.split('\n').map(line => encodeURIComponent(line)).join('%0A');
-  const url = 'https://wa.me/55' + phone + '?text=' + msgEncoded;
+  var o = state.obras[waCurrentIdx];
+  var msgEncoded = buildWaMsg(o);
+  var url = 'https://wa.me/55' + phone + '?text=' + msgEncoded;
   window.open(url, '_blank');
   closeWaModal();
 }
 function buildWaMsg(o) {
-  const critico = o.diasAtraso >= 90;
-  const statusLine = critico ? '*Status:* CRITICO' : '*Status:* ' + (o.status || 'Pendente');
-  const baseSituacao = (o.obs && o.obs.trim()) ? o.obs.trim()
+  var critico = o.diasAtraso >= 90;
+  var statusLine = critico ? '*Status:* CRITICO' : '*Status:* ' + (o.status || 'Pendente');
+  var situacao = (o.obs && o.obs.trim()) ? o.obs.trim()
     : (o.detalhamento && o.detalhamento.trim()) ? o.detalhamento.trim()
     : 'Sem informacoes adicionais.';
-  const reprogPrefix = (o.reprogramacao && o.reprogramacao.toLowerCase() !== 'nao' && o.reprogramacao.trim() !== '')
-    ? 'Reprogramacao - ' : '';
-  const situacaoFinal = reprogPrefix + baseSituacao;
-
-  const linhas = [
-    'PENDENCIA TECNICA - ACAO NECESSARIA',
-    '',
-    'Ola!',
-    '',
-    'Identificamos uma obra com pendencia tecnica vinculada a sua equipe:',
-    '',
-    '*GPM:* ' + o.gpm,
-    '*OT:* ' + o.ot,
-    '*Obra:* ' + o.obra,
-    '*Municipio:* ' + o.municipio,
-    '*Supervisor:* ' + o.supervisor,
-    '',
-    statusLine,
-    '*Dias aguardando:* ' + o.diasAtraso + ' dias',
-    '*Motivo:* ' + o.motivoPendencia,
-    '',
-    '*Situacao Atual:*',
-    situacaoFinal,
-    '',
-    '*Valor da obra:* ' + fmtValor(o.valor),
-    '',
-    'Por gentileza, solicitamos uma previsao para regularizacao desta pendencia.'
-  ];
-
-  return linhas.join('\n');
+  if (o.reprogramacao && o.reprogramacao.trim() !== '' && o.reprogramacao.toLowerCase() !== 'nao') {
+    situacao = 'Reprogramacao - ' + situacao;
+  }
+  var p = '%0A';
+  return 'PENDENCIA%20TECNICA%20-%20ACAO%20NECESSARIA'
+    + p + p + 'Ola!'
+    + p + p + 'Identificamos%20uma%20obra%20com%20pendencia%20tecnica%20vinculada%20a%20sua%20equipe%3A'
+    + p + p + encodeURIComponent('*GPM:* ' + o.gpm)
+    + p + encodeURIComponent('*OT:* ' + o.ot)
+    + p + encodeURIComponent('*Obra:* ' + o.obra)
+    + p + encodeURIComponent('*Municipio:* ' + o.municipio)
+    + p + encodeURIComponent('*Supervisor:* ' + o.supervisor)
+    + p + p + encodeURIComponent(statusLine)
+    + p + encodeURIComponent('*Dias aguardando:* ' + o.diasAtraso + ' dias')
+    + p + encodeURIComponent('*Motivo:* ' + o.motivoPendencia)
+    + p + p + encodeURIComponent('*Situacao Atual:*')
+    + p + encodeURIComponent(situacao)
+    + p + p + encodeURIComponent('*Valor da obra:* ' + fmtValor(o.valor))
+    + p + p + 'Por%20gentileza%2C%20solicitamos%20uma%20previsao%20para%20regularizacao%20desta%20pendencia.';
 }
-function openWaConsolidado() {
+ function openWaConsolidado() {
   const msg = buildWaConsolidado();
   document.getElementById('wa-cons-preview').textContent = msg;
   document.getElementById('wa-cons-phone').value = '';
