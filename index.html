@@ -119,7 +119,8 @@
   .wa-input:focus { outline: none; border-color: #25D366; }
   .wa-actions { display: flex; gap: 8px; justify-content: flex-end; }
   .wa-send { background: #25D366; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
-  .wa-send:hover { background: #1da851; }
+  .wa-send:hover { background: #1da851; } line-height: 1; transition: background .15s; }
+  .edit-btn:hover { background: var(--surface2); color: var(--text); }
   .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; flex-shrink: 0; }
   #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--text); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; pointer-events: none; z-index: 999; }
   #toast.show { opacity: 1; transform: translateY(0); }
@@ -407,13 +408,13 @@
 <div id="toast"></div>
 
 <div id="wa-modal" style="display:none;" class="wa-modal" onclick="if(event.target===this)closeWaModal()">
-  <div class="wa-modal-box">
-    <div class="wa-modal-title">📱 Enviar via WhatsApp</div>
+  <div class="wa-modal-box" style="width:460px;">
+    <div class="wa-modal-title">📋 Mensagem pronta para copiar</div>
     <div class="wa-modal-sub" id="wa-modal-sub">Obra — GPM</div>
-    <input type="tel" id="wa-phone" class="wa-input" placeholder="Ex: 88999999999 (com DDD)" />
+    <textarea id="wa-msg-text" readonly style="width:100%;height:220px;font-family:var(--font);font-size:12px;line-height:1.7;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);resize:none;margin-bottom:10px;color:var(--text);"></textarea>
     <div class="wa-actions">
-      <button class="btn" onclick="closeWaModal()">Cancelar</button>
-      <button class="wa-send" onclick="sendWhatsApp()">📤 Abrir WhatsApp</button>
+      <button class="btn" onclick="closeWaModal()">Fechar</button>
+      <button class="wa-send" id="wa-copy-btn" onclick="copyWaMsg()">📋 Copiar mensagem</button>
     </div>
   </div>
 </div>
@@ -662,7 +663,7 @@ function renderAcompanhamento() {
         +"<td style='color:"+(o.responsavel?"var(--text)":"var(--text3)")+"'>"+( o.responsavel||"—")+"</td>"
         +"<td class='mono' style='font-size:11px;color:"+(o.dataResolucao?"var(--text)":"var(--text3)")+"'>"+(o.dataResolucao?formatDateStr(o.dataResolucao):"—")+"</td>"
         +"<td style='font-size:11px;color:"+(o.obs?"var(--text)":"var(--text3)")+"'>"+( o.obs||"—")+"</td>"
-        +"<td style='white-space:nowrap;'>"+stateTag+"<button class='wa-btn' onclick='openWaModal("+idx+")' title='Enviar WhatsApp'>💬</button><button class='edit-btn' onclick='toggleEdit("+idx+")' title='Editar'>✏️</button></td></tr>";
+        +"<td style='white-space:nowrap;'>"+stateTag+"<button class='wa-btn' onclick='openWaModal("+idx+")' title='Copiar mensagem'>📋</button><button class='edit-btn' onclick='toggleEdit("+idx+")' title='Editar'>✏️</button></td></tr>";
     }
   }).join("");
   updatePendingBadge();
@@ -1135,10 +1136,10 @@ function openWaModal(idx) {
   const items = state.obras;
   const o = items[idx];
   waCurrentIdx = idx;
-  document.getElementById('wa-modal-sub').textContent = 'OS ' + o.gpm + ' — ' + o.obra;
-  document.getElementById('wa-phone').value = '';
+  document.getElementById('wa-modal-sub').textContent = 'GPM ' + o.gpm + ' — ' + o.obra;
+  document.getElementById('wa-msg-text').value = buildWaMsg(o);
+  document.getElementById('wa-copy-btn').textContent = '📋 Copiar mensagem';
   document.getElementById('wa-modal').style.display = 'flex';
-  setTimeout(() => document.getElementById('wa-phone').focus(), 100);
 }
 
 function closeWaModal() {
@@ -1146,42 +1147,44 @@ function closeWaModal() {
   waCurrentIdx = null;
 }
 
-function sendWhatsApp() {
-  var phone = document.getElementById('wa-phone').value.replace(/\D/g,'');
-  if (!phone || phone.length < 10) { showToast('Informe um numero valido com DDD'); return; }
-  var o = state.obras[waCurrentIdx];
-  var msgEncoded = buildWaMsg(o);
-  var url = 'https://wa.me/55' + phone + '?text=' + msgEncoded;
-  window.open(url, '_blank');
-  closeWaModal();
+function copyWaMsg() {
+  const txt = document.getElementById('wa-msg-text');
+  txt.select();
+  navigator.clipboard.writeText(txt.value).then(() => {
+    document.getElementById('wa-copy-btn').textContent = '✅ Copiado!';
+    setTimeout(() => document.getElementById('wa-copy-btn').textContent = '📋 Copiar mensagem', 2000);
+  }).catch(() => {
+    document.execCommand('copy');
+    document.getElementById('wa-copy-btn').textContent = '✅ Copiado!';
+    setTimeout(() => document.getElementById('wa-copy-btn').textContent = '📋 Copiar mensagem', 2000);
+  });
 }
+
+function sendWhatsApp() { copyWaMsg(); }
+
 function buildWaMsg(o) {
-  var critico = o.diasAtraso >= 90;
-  var statusLine = critico ? '*Status:* CRITICO' : '*Status:* ' + (o.status || 'Pendente');
-  var situacao = (o.obs && o.obs.trim()) ? o.obs.trim()
-    : (o.detalhamento && o.detalhamento.trim()) ? o.detalhamento.trim()
-    : 'Sem informacoes adicionais.';
-  if (o.reprogramacao && o.reprogramacao.trim() !== '' && o.reprogramacao.toLowerCase() !== 'nao') {
-    situacao = 'Reprogramacao - ' + situacao;
-  }
-  var p = '%0A';
-  return 'PENDENCIA%20TECNICA%20-%20ACAO%20NECESSARIA'
-    + p + p + 'Ola!'
-    + p + p + 'Identificamos%20uma%20obra%20com%20pendencia%20tecnica%20vinculada%20a%20sua%20equipe%3A'
-    + p + p + encodeURIComponent('*GPM:* ' + o.gpm)
-    + p + encodeURIComponent('*OT:* ' + o.ot)
-    + p + encodeURIComponent('*Obra:* ' + o.obra)
-    + p + encodeURIComponent('*Municipio:* ' + o.municipio)
-    + p + encodeURIComponent('*Supervisor:* ' + o.supervisor)
-    + p + p + encodeURIComponent(statusLine)
-    + p + encodeURIComponent('*Dias aguardando:* ' + o.diasAtraso + ' dias')
-    + p + encodeURIComponent('*Motivo:* ' + o.motivoPendencia)
-    + p + p + encodeURIComponent('*Situacao Atual:*')
-    + p + encodeURIComponent(situacao)
-    + p + p + encodeURIComponent('*Valor da obra:* ' + fmtValor(o.valor))
-    + p + p + 'Por%20gentileza%2C%20solicitamos%20uma%20previsao%20para%20regularizacao%20desta%20pendencia.';
+  const critico = o.diasAtraso >= 90 ? ' (Status: CRÍTICO)' : '';
+  const partes = [
+    '⚠️ *Pendência Técnica — Ação Necessária*',
+    '',
+    'Olá! Identificamos uma obra com pendência técnica referente à sua equipe:',
+    '',
+    '🔢 *GPM:* ' + o.gpm,
+    '📄 *OT:* ' + o.ot,
+    '🏗️ *Obra:* ' + o.obra,
+    '📍 *Município:* ' + o.municipio,
+    '👥 *Supervisor:* ' + o.supervisor,
+    '⏳ *Dias aguardando:* ' + o.diasAtraso + ' dias' + critico,
+    '❌ *Motivo:* ' + o.motivoPendencia,
+    '📝 *O que precisa ser feito:* ' + o.detalhamento,
+    '💰 *Valor da obra:* ' + fmtValor(o.valor),
+    '',
+    'Por gentileza, nos informe uma previsão para regularização desta pendência.'
+  ];
+  return partes.join('\n');
 }
- function openWaConsolidado() {
+
+function openWaConsolidado() {
   const msg = buildWaConsolidado();
   document.getElementById('wa-cons-preview').textContent = msg;
   document.getElementById('wa-cons-phone').value = '';
