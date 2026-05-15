@@ -1166,7 +1166,7 @@ function buildWaMsg(o) {
     ? '**Status:** CRÍTICO'
     : '**Status:** ' + (o.status || 'Pendente');
 
-  // Situação atual: usa Observação (se tiver), senão Detalhamento
+  // Situação atual: usa Observação se existir; senão, Detalhamento
   const baseSituacao = (o.obs && o.obs.trim())
     ? o.obs.trim()
     : (o.detalhamento && o.detalhamento.trim())
