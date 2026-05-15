@@ -1000,6 +1000,10 @@ function renderConsolidado() {
   const datVRes = points.map(p=>Math.round(p.valorRes||0));
 
   // Qtd chart
+  const datVNovas = points.map(p => Math.round(p.valorNovas||0));
+  const datTrat  = points.map(p => parseInt(p.emTrat)||0);
+  const datVTrat = points.map(p => Math.round(p.valorTrat||0));
+  const datVResFinal = points.map(p => Math.round(p.valorRes||0));
   Chart.register(ChartDataLabels);
   if (consChart) { consChart.destroy(); consChart = null; }
   const ctx = document.getElementById('cons-chart');
